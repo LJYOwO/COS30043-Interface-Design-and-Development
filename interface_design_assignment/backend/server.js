@@ -212,7 +212,6 @@ function mapReview(r) {
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body
   try {
-    // 1. Verify credentials with Supabase GoTrue Auth API
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -222,7 +221,6 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ success: false, error: authError.message })
     }
 
-    // 2. Fetch extended profile metadata (Role, Name, Ban status, etc.) from the profiles table
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
@@ -233,7 +231,7 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(500).json({ success: false, error: 'Profile metadata missing or corrupted.' })
     }
 
-    // 🔥 NEW: Check if account is banned
+    // 🔥 Check if account is banned
     if (profile.is_banned) {
       return res.status(403).json({ 
         success: false, 
@@ -241,7 +239,6 @@ app.post('/api/auth/login', async (req, res) => {
       })
     }
 
-    // 3. Return unified user session object to the Vue frontend Pinia store
     res.json({
       success: true,
       user: {
@@ -260,7 +257,6 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/auth/register', async (req, res) => {
   const { name, email, password } = req.body
   try {
-    // Register the user. (A Supabase database trigger will auto-create the public.profile)
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -279,7 +275,7 @@ app.post('/api/auth/register', async (req, res) => {
         id: authData.user.id,
         email: authData.user.email,
         name: name,
-        role: 'customer' // Default fallback before trigger verification
+        role: 'customer'
       }
     })
   } catch (err) {
@@ -289,24 +285,20 @@ app.post('/api/auth/register', async (req, res) => {
 })
 
 // ============================================================================
-// ── USER MANAGEMENT & ANALYTICS (🔥 NEW RBAC ENGINE) ────────────────────────
+// ── USER MANAGEMENT & ANALYTICS ────────────────────────────────────────────
 // ============================================================================
 
-// Get all users with spending analytics (VIP ranking)
 app.get('/api/users', async (req, res) => {
   try {
-    // Fetch all profiles
     const { data: profiles, error: profErr } = await supabase.from('profiles').select('*')
     if (profErr) throw profErr
 
-    // Fetch all non-cancelled orders for spending calculation
     const { data: orders, error: ordErr } = await supabase
       .from('orders')
       .select('user_id, total')
       .neq('status', 'cancelled')
     if (ordErr) throw ordErr
 
-    // Calculate analytics for each user
     const usersAnalytics = profiles.map(profile => {
       const userOrders = orders.filter(o => o.user_id === profile.id)
       const totalSpend = userOrders.reduce((sum, o) => sum + parseFloat(o.total || 0), 0)
@@ -330,7 +322,6 @@ app.get('/api/users', async (req, res) => {
       }
     })
 
-    // Sort by total spend descending (Top spenders first)
     usersAnalytics.sort((a, b) => b.analytics.totalSpend - a.analytics.totalSpend)
 
     res.json({ success: true, data: usersAnalytics, total: usersAnalytics.length })
@@ -340,7 +331,6 @@ app.get('/api/users', async (req, res) => {
   }
 })
 
-// Update user role (Admin only)
 app.patch('/api/users/:id/role', async (req, res) => {
   const { role } = req.body
   const validRoles = ['customer', 'staff', 'admin']
@@ -365,7 +355,6 @@ app.patch('/api/users/:id/role', async (req, res) => {
   }
 })
 
-// Ban / Unban user
 app.patch('/api/users/:id/ban', async (req, res) => {
   const { isBanned, reason } = req.body
   
@@ -395,10 +384,9 @@ app.patch('/api/users/:id/ban', async (req, res) => {
 })
 
 // ============================================================================
-// ── PROFILES (User Dashboard & Checkout Auto-fill) ──────────────────────────
+// ── PROFILES ────────────────────────────────────────────────────────────────
 // ============================================================================
 
-// Get user profile by ID
 app.get('/api/profiles/:id', async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -418,7 +406,6 @@ app.get('/api/profiles/:id', async (req, res) => {
   }
 })
 
-// Update user profile (name, phone, address)
 app.patch('/api/profiles/:id', async (req, res) => {
   try {
     const { name, phone, address } = req.body
@@ -450,7 +437,6 @@ app.patch('/api/profiles/:id', async (req, res) => {
   }
 })
 
-// ── Health ────────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), service: 'FloraLab API v2 (Supabase)' })
 })
@@ -732,10 +718,9 @@ app.patch('/api/orders/:id/status', async (req, res) => {
 })
 
 // ═══════════════════════════════════════════════════════════════════════════
-// REVIEWS (🔥 UPGRADED: Smart Verification + Auto-Approval + Likes)
+// REVIEWS
 // ═══════════════════════════════════════════════════════════════════════════
 
-// GET reviews - supports filtering by product, user, reported status
 app.get('/api/reviews', async (req, res) => {
   try {
     const { productId, userId, reported } = req.query
@@ -766,7 +751,6 @@ app.get('/api/reviews', async (req, res) => {
   }
 })
 
-// POST review - Smart verification: auto-check if user purchased this product
 app.post('/api/reviews', async (req, res) => {
   const { productId, userId, userName, rating, comment } = req.body
 
@@ -825,7 +809,6 @@ app.post('/api/reviews', async (req, res) => {
   }
 })
 
-// 🔥 Toggle Real Likes (Like/Unlike)
 app.post('/api/reviews/:id/like', async (req, res) => {
   const { userId } = req.body
   if (!userId) {
@@ -866,7 +849,6 @@ app.post('/api/reviews/:id/like', async (req, res) => {
   }
 })
 
-// PATCH review - Update review (user can edit own, admin can moderate)
 app.patch('/api/reviews/:id', async (req, res) => {
   try {
     const updates = {}
@@ -894,7 +876,6 @@ app.patch('/api/reviews/:id', async (req, res) => {
   }
 })
 
-// Report inappropriate review
 app.post('/api/reviews/:id/report', async (req, res) => {
   const { reason } = req.body
   if (!reason) {
@@ -917,7 +898,6 @@ app.post('/api/reviews/:id/report', async (req, res) => {
   }
 })
 
-// DELETE review
 app.delete('/api/reviews/:id', async (req, res) => {
   try {
     const { error } = await supabase.from('reviews').delete().eq('id', req.params.id)
@@ -929,8 +909,10 @@ app.delete('/api/reviews/:id', async (req, res) => {
   }
 })
 
-// ── 404 for API routes ────────────────────────────────────────────────────
-app.use('/api/*', (_req, res) => {
+// ============================================================================
+// ── 404 for API routes (🔥 FIXED: changed '/api/*' to '/api') ──────────────
+// ============================================================================
+app.use('/api', (_req, res) => {
   res.status(404).json({ success: false, error: 'API endpoint not found' })
 })
 
@@ -942,9 +924,11 @@ app.use('/api/*', (_req, res) => {
 const frontendDistPath = path.join(process.cwd(), '../florist_website/dist')
 app.use(express.static(frontendDistPath))
 
-// 🔥 Catch-all route for Vue Router History Mode
+// ============================================================================
+// ── CATCH-ALL ROUTE FOR VUE ROUTER HISTORY MODE (🔥 FIXED: changed '*' to '/(.*)')
+// ============================================================================
 // All non-API requests go to index.html so Vue Router can handle them
-app.get('*', (req, res) => {
+app.get('/(.*)', (req, res) => {
   res.sendFile(path.join(frontendDistPath, 'index.html'))
 })
 
