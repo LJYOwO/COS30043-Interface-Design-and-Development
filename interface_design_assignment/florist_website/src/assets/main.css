@@ -1,0 +1,46 @@
+/* src/assets/main.css */
+
+/* 1. 引入 Tailwind v4 核心引擎[cite: 28] */
+@import "tailwindcss";
+
+/* 2. 定义你的自定义主题 (v4 的新语法，取代 tailwind.config.js) */
+@theme {
+  /* 基础颜色定义 */
+  --color-ink: #2D3436;
+  
+  /* 奶油色系[cite: 29] */
+  --color-cream-50: #FEFCF9;
+  --color-cream-100: #FDFBF7;
+  --color-cream-200: #FAF6EE;
+  --color-cream-300: #F5EFE2;
+
+  /* 鼠尾草绿[cite: 29] */
+  --color-sage-100: #D8E5DA;
+  --color-sage-200: #BECFBF;
+  --color-sage-300: #9DB6A0;
+  --color-sage-600: #486B4C;
+
+  /* 粉黛色与薰衣草[cite: 29] */
+  --color-blush-100: #F9E5E5;
+  --color-blush-300: #E9C1C0;
+  --color-lavender-100: #EAE2FE;
+  --color-lavender-200: #D4C2FC;
+
+  /* 字体配置[cite: 29] */
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  /* 梦幻阴影[cite: 29] */
+  --shadow-glass: 0 4px 24px 0 rgba(157,182,160,0.10);
+  --shadow-petal: 0 2px 16px 0 rgba(233,193,192,0.25);
+}
+
+/* 3. 现在的 @apply 就绝对不会报错了，因为主题已经加载了 */
+body {
+  @apply bg-cream-100 text-ink antialiased font-sans;
+}
+
+/* 诊断红条：如果看到这个，说明 Grid 和布局都通了 */
+.tailwind-check {
+  @apply bg-red-500 text-white p-4 text-center font-bold;
+}
