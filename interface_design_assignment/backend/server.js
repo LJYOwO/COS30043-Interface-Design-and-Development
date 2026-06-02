@@ -34,6 +34,7 @@
 
 import express from 'express'
 import cors from 'cors'
+import path from 'path'  // 🔥 ADDED: For serving static frontend files
 import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import multer from 'multer'
@@ -928,8 +929,24 @@ app.delete('/api/reviews/:id', async (req, res) => {
   }
 })
 
-// ── 404 ───────────────────────────────────────────────────────────────────
-app.use((_req, res) => res.status(404).json({ success: false, error: 'Route not found' }))
+// ── 404 for API routes ────────────────────────────────────────────────────
+app.use('/api/*', (_req, res) => {
+  res.status(404).json({ success: false, error: 'API endpoint not found' })
+})
+
+// ============================================================================
+// ── STATIC FILE SERVING FOR PRODUCTION (AFTER ALL API ROUTES) ──────────────
+// ============================================================================
+
+// 🔥 Serve the built Vue frontend files
+const frontendDistPath = path.join(process.cwd(), '../florist_website/dist')
+app.use(express.static(frontendDistPath))
+
+// 🔥 Catch-all route for Vue Router History Mode
+// All non-API requests go to index.html so Vue Router can handle them
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendDistPath, 'index.html'))
+})
 
 // ── Error handler ─────────────────────────────────────────────────────────
 app.use((err, _req, res, _next) => {
@@ -948,6 +965,7 @@ app.listen(PORT, () => {
   ║   Storage : Supabase Bucket          ║
   ║   Reviews : Post-Moderation + Likes  ║
   ║   Users   : RBAC + Analytics         ║
+  ║   Static  : Vue Frontend Serving     ║
   ╚══════════════════════════════════════╝
   `)
 })
