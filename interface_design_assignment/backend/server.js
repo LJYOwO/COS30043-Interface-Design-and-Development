@@ -928,7 +928,7 @@ app.use(express.static(frontendDistPath))
 // ── CATCH-ALL ROUTE FOR VUE ROUTER HISTORY MODE (🔥 FIXED: changed '*' to '/(.*)')
 // ============================================================================
 // All non-API requests go to index.html so Vue Router can handle them
-app.get('/(.*)', (req, res) => {
+app.use((req, res) => {
   res.sendFile(path.join(frontendDistPath, 'index.html'))
 })
 
