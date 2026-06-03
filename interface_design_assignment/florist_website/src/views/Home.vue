@@ -138,7 +138,6 @@
           </div>
         </div>
 
-        <!-- 🔥 FIXED: Changed button color from green to blush pink to match the theme -->
         <div class="mt-16">
           <RouterLink
             to="/customizer"
@@ -147,6 +146,72 @@
             🌿 Try the Lab →
           </RouterLink>
         </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         🔥 NEW: Explore FloraLab (Brand Story Section)
+         Guides users to Process, Sustainability, and Contact pages
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <section class="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto" style="background-color: #FDFBF7;">
+      <div class="text-center mb-16">
+        <p class="text-[10px] font-bold text-[#9DB6A0] uppercase tracking-widest mb-3">Explore FloraLab</p>
+        <h2 class="font-serif text-4xl sm:text-5xl text-ink font-bold">Beyond the Blooms</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Process Card - Purple theme for Science -->
+        <RouterLink 
+          to="/process" 
+          class="group block bg-white/70 backdrop-blur-md p-10 rounded-3xl border border-cream-200 hover:shadow-xl transition-all duration-500 hover:-translate-y-2 text-center"
+        >
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-[#EAE2FE]/60 flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform duration-500 shadow-sm">
+            🔬
+          </div>
+          <h3 class="font-serif text-2xl font-bold text-ink mb-3">The Floral Science</h3>
+          <p class="text-sm text-ink/65 mb-8 font-medium leading-relaxed">
+            Discover how we condition, hydrate, and hand-tie every stem for maximum vase life.
+          </p>
+          <span class="inline-flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-[#CE8280] group-hover:text-[#B87472] transition-colors border-b border-transparent group-hover:border-[#B87472] pb-0.5">
+            Read More →
+          </span>
+        </RouterLink>
+
+        <!-- Sustainability Card - Green theme -->
+        <RouterLink 
+          to="/sustainability" 
+          class="group block bg-white/70 backdrop-blur-md p-10 rounded-3xl border border-cream-200 hover:shadow-xl transition-all duration-500 hover:-translate-y-2 text-center"
+        >
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-[#EAF4EC]/80 flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform duration-500 shadow-sm">
+            🌿
+          </div>
+          <h3 class="font-serif text-2xl font-bold text-ink mb-3">Our Commitment</h3>
+          <p class="text-sm text-ink/65 mb-8 font-medium leading-relaxed">
+            100% plastic-free, carbon neutral, and strictly sourced from ethical fair-trade farms.
+          </p>
+          <span class="inline-flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-[#9DB6A0] group-hover:text-[#7A9E7E] transition-colors border-b border-transparent group-hover:border-[#7A9E7E] pb-0.5">
+            Learn How →
+          </span>
+        </RouterLink>
+
+        <!-- Contact Card - Blush theme -->
+        <RouterLink 
+          to="/contact" 
+          class="group block bg-white/70 backdrop-blur-md p-10 rounded-3xl border border-cream-200 hover:shadow-xl transition-all duration-500 hover:-translate-y-2 text-center"
+        >
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-[#F9E5E5]/80 flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform duration-500 shadow-sm">
+            ✉️
+          </div>
+          <h3 class="font-serif text-2xl font-bold text-ink mb-3">Get in Touch</h3>
+          <p class="text-sm text-ink/65 mb-8 font-medium leading-relaxed">
+            Planning a bespoke wedding arch or have a question about your order? Let's talk blooms.
+          </p>
+          <span class="inline-flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-[#CE8280] group-hover:text-[#B87472] transition-colors border-b border-transparent group-hover:border-[#B87472] pb-0.5">
+            Contact Us →
+          </span>
+        </RouterLink>
+
       </div>
     </section>
 
