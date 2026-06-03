@@ -306,7 +306,7 @@
                 v-if="flower.imageUrl"
                 :src="flower.imageUrl"
                 :alt="flower.name"
-                class="w-full h-full object-cover"
+                class="w-full h-full object-cover object-top"
               />
               <span v-else class="text-xl">{{ flower.emoji }}</span>
             </div>
