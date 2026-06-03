@@ -1,7 +1,7 @@
 <template>
   <Transition name="modal">
     <div v-if="modelValue" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-ink/30 backdrop-blur-sm" @click="$emit('update:modelValue', false)"/>
+      <div class="absolute inset-0 bg-ink/30 backdrop-blur-sm" @click="closeModal"/>
 
       <div class="relative rounded-3xl shadow-glass-lg w-full max-w-md animate-bloom overflow-hidden" style="background:#FDFBF7">
 
@@ -12,7 +12,7 @@
             <p class="text-xs text-ink/50 mt-0.5">{{ productName }}</p>
           </div>
           <button class="p-1.5 rounded-full hover:bg-cream-200 transition-colors text-ink/40"
-                  @click="$emit('update:modelValue', false)">✕</button>
+                  @click="closeModal">✕</button>
         </div>
 
         <!-- Body -->
@@ -68,11 +68,11 @@
             />
           </div>
 
-          <!-- Info note -->
+          <!-- 🔥 UPDATED: Info note matching Direct-Publish logic (Blush theme) -->
           <div class="flex items-start gap-2 px-3 py-2.5 rounded-2xl text-xs text-ink/60 leading-relaxed"
-               style="background:rgba(212,194,252,0.1); border:1px solid rgba(212,194,252,0.2)">
-            <span class="flex-shrink-0 mt-0.5">ℹ️</span>
-            <span>Your review will be visible after admin approval. Thank you for your feedback!</span>
+               style="background:rgba(249,229,229,0.4); border:1px solid rgba(206,130,128,0.2)">
+            <span class="flex-shrink-0 mt-0.5">🌸</span>
+            <span>Your thoughts are shared instantly with our floral community. Thank you for helping us bloom!</span>
           </div>
 
           <!-- Error -->
@@ -84,7 +84,7 @@
           <button
             class="flex-1 py-2.5 rounded-full text-sm text-ink/60 transition-colors"
             style="border:1px solid #EDE3CF"
-            @click="$emit('update:modelValue', false)"
+            @click="closeModal"
           >Cancel</button>
           <button
             class="flex-1 py-2.5 rounded-full text-white text-sm font-medium transition-all flex items-center justify-center gap-2"
@@ -148,18 +148,39 @@ const commentPlaceholder = computed(() => {
   return placeholders[form.value.rating] || placeholders[0]
 })
 
+// Unified modal closing function
+function closeModal() {
+  emit('update:modelValue', false)
+}
+
+/**
+ * Submit review to backend
+ * 🔥 FIXED: Automatically closes the modal on successful submission
+ */
 async function submitReview() {
   error.value = ''
-  if (!form.value.rating)          { error.value = 'Please select a star rating.';  return }
-  if (!form.value.comment.trim())  { error.value = 'Please write a review comment.'; return }
-  if (form.value.comment.length < 10) { error.value = 'Review must be at least 10 characters.'; return }
+  
+  // Validation
+  if (!form.value.rating) { 
+    error.value = 'Please select a star rating.'  
+    return 
+  }
+  if (!form.value.comment.trim()) { 
+    error.value = 'Please write a review comment.' 
+    return 
+  }
+  if (form.value.comment.length < 10) { 
+    error.value = 'Review must be at least 10 characters.' 
+    return 
+  }
 
   submitting.value = true
+  
   try {
-    const res  = await fetch('/api/reviews', {
-      method:  'POST',
+    const res = await fetch('/api/reviews', {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({
+      body: JSON.stringify({
         productId:  props.productId,
         orderId:    props.orderId,
         userId:     userStore.user?.id,
@@ -168,11 +189,20 @@ async function submitReview() {
         comment:    form.value.comment.trim(),
       }),
     })
+    
     const json = await res.json()
-    if (!res.ok) throw new Error(json.error || 'Submission failed')
+    
+    if (!res.ok) {
+      throw new Error(json.error || 'Submission failed')
+    }
 
+    // Emit submitted event to parent component
     emit('submitted', json.data)
-    emit('update:modelValue', false)
+    
+    // 🔥 CRITICAL: Close the modal automatically on success
+    // This makes the modal disappear right after successful submission
+    closeModal()
+    
   } catch (e) {
     error.value = e.message
   } finally {

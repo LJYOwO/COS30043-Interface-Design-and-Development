@@ -44,15 +44,27 @@
         >
           <div class="flex justify-between items-start border-b border-gray-200/50 pb-4 mb-4">
             <div>
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-3 flex-wrap">
                 <p class="text-[11px] text-ink/50 font-bold uppercase tracking-widest">Order #{{ order.id }}</p>
                 <span v-if="order.isGift" class="px-2 py-0.5 rounded bg-rose-100 text-rose-500 text-[9px] font-bold uppercase tracking-widest">Gift</span>
               </div>
               <p class="text-sm font-bold text-ink mt-1">{{ formatDate(order.createdAt) }}</p>
             </div>
-            <span class="px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm" :class="statusClass(order.status)">
-              {{ order.status }}
-            </span>
+            <div class="flex flex-col items-end gap-2">
+              <span class="px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm" :class="statusClass(order.status)">
+                {{ order.status }}
+              </span>
+              <!-- 🔥 NEW: Cancel Order Button - Only show for processing/prepared orders -->
+              <button 
+                v-if="order.status === 'processing' || order.status === 'prepared'"
+                @click="cancelOrder(order.id)" 
+                :disabled="cancellingId === order.id"
+                class="px-3 py-1 text-[10px] font-bold tracking-wider uppercase text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-all active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none"
+              >
+                <span v-if="cancellingId === order.id" class="inline-block w-3 h-3 border-2 border-rose-600/30 border-t-rose-600 rounded-full animate-spin mr-1"></span>
+                Cancel Order
+              </button>
+            </div>
           </div>
 
           <div class="space-y-4">
@@ -93,6 +105,7 @@
       </div>
     </div>
 
+    <!-- Review Modal -->
     <Transition name="fade">
       <div v-if="showReviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-ink/40 backdrop-blur-sm" @click="closeReviewModal" />
@@ -135,6 +148,7 @@
       </div>
     </Transition>
 
+    <!-- Toast Notification -->
     <Transition name="toast">
       <div v-if="toast.show" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-full text-sm font-bold uppercase tracking-wider text-white shadow-xl flex items-center gap-2 whitespace-nowrap" :style="{ background: toast.type === 'success' ? '#9DB6A0' : '#CE8280' }">
         {{ toast.type === 'success' ? '✓' : '⚠️' }} {{ toast.message }}
@@ -155,6 +169,9 @@ const loading = ref(true)
 const allOrders = ref([])
 const activeFilter = ref('All')
 const statusFilters = ['All', 'Processing', 'Prepared', 'Dispatched', 'Delivered', 'Cancelled']
+
+// Cancel order state
+const cancellingId = ref(null)
 
 const toast = ref({ show: false, message: '', type: 'success' })
 
@@ -177,10 +194,42 @@ async function fetchOrders() {
 
 onMounted(fetchOrders)
 
+// ── 🔥 NEW: Cancel Order Function ─────────────────────────────────────────
+const cancelOrder = async (orderId) => {
+  const confirmCancel = confirm("Are you sure you want to cancel this order? This action cannot be undone. Any cancellations will be processed immediately.")
+  if (!confirmCancel) return
+
+  cancellingId.value = orderId
+  try {
+    const res = await fetch(`/api/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'cancelled' })
+    })
+
+    const result = await res.json()
+    if (!res.ok) {
+      throw new Error(result.error || 'Failed to cancel order')
+    }
+
+    // Update local state
+    const orderIndex = allOrders.value.findIndex(o => o.id === orderId)
+    if (orderIndex !== -1) {
+      allOrders.value[orderIndex].status = 'cancelled'
+    }
+    
+    showToast('Order cancelled successfully!', 'success')
+  } catch (err) {
+    console.error('[CANCEL_ORDER_ERROR]', err)
+    showToast(err.message, 'error')
+  } finally {
+    cancellingId.value = null
+  }
+}
+
 // ── Computed & Filters ────────────────────────────────────────────────────
 const filteredOrders = computed(() => {
   if (activeFilter.value === 'All') return allOrders.value
-  // 🔥 FIX: Use toLowerCase() to guarantee matching between 'Delivered' and 'delivered'
   return allOrders.value.filter(o => (o.status || '').toLowerCase() === activeFilter.value.toLowerCase())
 })
 
@@ -213,7 +262,6 @@ const submittingReview = ref(false)
 const reviewTarget = ref(null)
 const reviewForm = ref({ rating: 5, comment: '' })
 
-// 🔥 FIX: Pass both order and the specific item to grab the correct name and ID
 function openReview(orderId, item) {
   reviewTarget.value = {
     orderId: orderId,
@@ -254,21 +302,22 @@ async function submitReview() {
     
     const json = await res.json()
     
-    // Check for "Already reviewed" conflict
     if (!res.ok) {
       if (res.status === 409) throw new Error('You have already reviewed this item.')
       throw new Error(json.error || 'Failed to submit review.')
     }
 
-    // Temporarily mark the item as reviewed in the local state so the button updates
     const order = allOrders.value.find(o => o.id === reviewTarget.value.orderId)
     if (order) {
       const item = order.items.find(i => i.productId === reviewTarget.value.productId)
       if (item) item.reviewed = true
     }
 
-    showToast('Review submitted successfully! Pending approval. 🌸')
+    showToast('Review submitted successfully! It is now live. 🌸')
+    
+    submittingReview.value = false 
     closeReviewModal()
+
   } catch (err) {
     console.error('[SUBMIT_REVIEW_ERROR]', err)
     showToast(err.message, 'error')
