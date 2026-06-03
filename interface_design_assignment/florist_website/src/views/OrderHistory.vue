@@ -54,7 +54,6 @@
               <span class="px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm" :class="statusClass(order.status)">
                 {{ order.status }}
               </span>
-              <!-- 🔥 NEW: Cancel Order Button - Only show for processing/prepared orders -->
               <button 
                 v-if="order.status === 'processing' || order.status === 'prepared'"
                 @click="cancelOrder(order.id)" 
@@ -77,16 +76,17 @@
                 <p class="text-[10px] text-ink/50 font-bold uppercase tracking-widest mt-0.5">Qty: {{ item.qty || 1 }} · RM {{ parseFloat(item.price).toFixed(2) }}</p>
               </div>
               
+              <!-- Rate It Button -->
               <button
                 v-if="order.status.toLowerCase() === 'delivered' && !String(item.productId).startsWith('custom')"
                 @click="openReview(order.id, item)"
                 class="px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 flex-shrink-0"
                 :class="item.reviewed 
-                  ? 'bg-cream-100 border-cream-200 text-ink/40 cursor-not-allowed' 
+                  ? 'bg-[#9DB6A0]/20 border-[#9DB6A0] text-[#486B4C] cursor-not-allowed opacity-60' 
                   : 'bg-[#CE8280]/10 border-[#CE8280]/20 text-[#CE8280] hover:bg-[#CE8280] hover:text-white shadow-sm'"
                 :disabled="item.reviewed"
               >
-                {{ item.reviewed ? 'Reviewed ✓' : 'Rate It ★' }}
+                {{ item.reviewed ? '✓ Reviewed' : '★ Rate It' }}
               </button>
             </div>
           </div>
@@ -150,7 +150,7 @@
 
     <!-- Toast Notification -->
     <Transition name="toast">
-      <div v-if="toast.show" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-full text-sm font-bold uppercase tracking-wider text-white shadow-xl flex items-center gap-2 whitespace-nowrap" :style="{ background: toast.type === 'success' ? '#9DB6A0' : '#CE8280' }">
+      <div v-if="toast.show" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-full text-sm font-bold uppercase tracking-wider text-white shadow-xl flex items-center gap-2" :style="{ background: toast.type === 'success' ? '#9DB6A0' : '#CE8280' }">
         {{ toast.type === 'success' ? '✓' : '⚠️' }} {{ toast.message }}
       </div>
     </Transition>
@@ -175,7 +175,13 @@ const cancellingId = ref(null)
 
 const toast = ref({ show: false, message: '', type: 'success' })
 
-// ── Fetch Orders ──────────────────────────────────────────────────────────
+// Review state
+const showReviewModal = ref(false)
+const submittingReview = ref(false)
+const reviewTarget = ref(null)
+const reviewForm = ref({ rating: 5, comment: '' })
+
+// ── Fetch Orders with Review Status ──────────────────────────────────────
 async function fetchOrders() {
   if (!userStore.user?.id) return
   loading.value = true
@@ -183,7 +189,40 @@ async function fetchOrders() {
     const res = await fetch(`/api/orders?userId=${userStore.user.id}`)
     if (res.ok) {
       const json = await res.json()
-      allOrders.value = json.data || []
+      const ordersData = json.data || []
+      
+      // 🔥 CRITICAL FIX: Fetch user's existing reviews to mark already reviewed items
+      try {
+        const revRes = await fetch(`/api/reviews?userId=${userStore.user.id}`)
+        if (revRes.ok) {
+          const revJson = await revRes.json()
+          const myReviews = revJson.data || []
+          
+          console.log('[DEBUG] Found reviews:', myReviews.length)
+          
+          // 🔥 Iterate through orders and mark reviewed items
+          for (const order of ordersData) {
+            if (order.items && Array.isArray(order.items)) {
+              for (const item of order.items) {
+                // Check if this specific order item has already been reviewed
+                const alreadyReviewed = myReviews.some(review => 
+                  review.orderId === order.id && 
+                  review.productId === item.productId
+                )
+                item.reviewed = alreadyReviewed
+                
+                if (alreadyReviewed) {
+                  console.log(`[DEBUG] Marked as reviewed: Order ${order.id}, Product ${item.productId}`)
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error('[REVIEWS_FETCH_ERROR]', e)
+      }
+
+      allOrders.value = ordersData
     }
   } catch (err) {
     console.error('[FETCH_ORDERS_ERROR]', err)
@@ -194,9 +233,9 @@ async function fetchOrders() {
 
 onMounted(fetchOrders)
 
-// ── 🔥 NEW: Cancel Order Function ─────────────────────────────────────────
+// ── Cancel Order Function ────────────────────────────────────────────────
 const cancelOrder = async (orderId) => {
-  const confirmCancel = confirm("Are you sure you want to cancel this order? This action cannot be undone. Any cancellations will be processed immediately.")
+  const confirmCancel = confirm("Are you sure you want to cancel this order? This action cannot be undone.")
   if (!confirmCancel) return
 
   cancellingId.value = orderId
@@ -212,7 +251,6 @@ const cancelOrder = async (orderId) => {
       throw new Error(result.error || 'Failed to cancel order')
     }
 
-    // Update local state
     const orderIndex = allOrders.value.findIndex(o => o.id === orderId)
     if (orderIndex !== -1) {
       allOrders.value[orderIndex].status = 'cancelled'
@@ -256,12 +294,7 @@ function showToast(message, type = 'success') {
   setTimeout(() => { toast.value.show = false }, 3500)
 }
 
-// ── Review Logic ──────────────────────────────────────────────────────────
-const showReviewModal = ref(false)
-const submittingReview = ref(false)
-const reviewTarget = ref(null)
-const reviewForm = ref({ rating: 5, comment: '' })
-
+// ── Review Functions ──────────────────────────────────────────────────────
 function openReview(orderId, item) {
   reviewTarget.value = {
     orderId: orderId,
@@ -307,20 +340,28 @@ async function submitReview() {
       throw new Error(json.error || 'Failed to submit review.')
     }
 
+    // 🔥 CRITICAL: Update local state to mark the item as reviewed immediately
     const order = allOrders.value.find(o => o.id === reviewTarget.value.orderId)
     if (order) {
       const item = order.items.find(i => i.productId === reviewTarget.value.productId)
-      if (item) item.reviewed = true
+      if (item) {
+        item.reviewed = true
+        console.log(`[DEBUG] Marked as reviewed: Order ${order.id}, Product ${item.productId}`)
+      }
     }
 
-    showToast('Review submitted successfully! It is now live. 🌸')
+    showToast('Review submitted successfully! Your feedback is now live. 🌸')
     
-    submittingReview.value = false 
-    closeReviewModal()
+    // 🔥 FIX: Auto-close modal after showing toast
+    // Wait a moment for the user to see the success state, then close
+    setTimeout(() => {
+      closeReviewModal()
+    }, 1500) // Closes after 1.5 seconds
 
   } catch (err) {
     console.error('[SUBMIT_REVIEW_ERROR]', err)
     showToast(err.message, 'error')
+    // Don't auto-close on error - let user fix the issue
   } finally {
     submittingReview.value = false
   }

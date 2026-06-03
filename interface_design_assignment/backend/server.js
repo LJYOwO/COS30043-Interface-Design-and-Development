@@ -34,20 +34,17 @@
 
 import express from 'express'
 import cors from 'cors'
-import path from 'path'  // 🔥 ADDED: For serving static frontend files
+import path from 'path'
 import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import multer from 'multer'
 
-// INITIALIZE ENV CONFIGURATION BEFORE CALLING PROCESS.ENV
 dotenv.config()
 
-// ── Supabase client ───────────────────────────────────────────────────────
 const SUPABASE_URL = process.env.SUPABASE_URL
 const SUPABASE_KEY = process.env.SUPABASE_KEY
 const PORT = process.env.PORT || 3001
 
-// Ensure backend crashes early with a clear log if variables are missing
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('[CRITICAL] Missing SUPABASE_URL or SUPABASE_KEY in .env file.')
   process.exit(1)
@@ -55,7 +52,6 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-// ── Express setup ─────────────────────────────────────────────────────────
 const app = express()
 
 app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:5173'] }))
@@ -70,7 +66,6 @@ app.use((req, _res, next) => {
 // ── FILE UPLOAD ENDPOINT (Multer + Supabase Storage) ────────────────────────
 // ============================================================================
 
-// Configure multer to hold the uploaded file in memory temporarily
 const upload = multer({ storage: multer.memoryStorage() })
 
 app.post('/api/upload', upload.single('image'), async (req, res) => {
@@ -79,11 +74,9 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
       return res.status(400).json({ success: false, error: 'No image file provided in the request payload.' })
     }
 
-    // 1. Generate a unique filename using timestamp and random hash
     const fileExtension = req.file.originalname.split('.').pop()
     const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExtension}`
 
-    // 2. Upload the raw buffer to Supabase Storage bucket
     const bucketName = process.env.SUPABASE_STORAGE_BUCKET || 'floralab-assets'
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from(bucketName)
@@ -98,12 +91,10 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
       return res.status(500).json({ success: false, error: 'Failed to stream file to Supabase cloud storage.' })
     }
 
-    // 3. Retrieve the permanent public URL for the newly uploaded asset
     const { data: publicUrlData } = supabase.storage
       .from(bucketName)
       .getPublicUrl(uniqueFileName)
 
-    // 4. Return the cloud URL back to the Vue frontend
     res.json({
       success: true,
       url: publicUrlData.publicUrl
@@ -231,7 +222,6 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(500).json({ success: false, error: 'Profile metadata missing or corrupted.' })
     }
 
-    // 🔥 Check if account is banned
     if (profile.is_banned) {
       return res.status(403).json({ 
         success: false, 
@@ -718,9 +708,10 @@ app.patch('/api/orders/:id/status', async (req, res) => {
 })
 
 // ═══════════════════════════════════════════════════════════════════════════
-// REVIEWS
+// REVIEWS (🔥 UPGRADED: Smart Verification with Order ID Binding)
 // ═══════════════════════════════════════════════════════════════════════════
 
+// GET reviews - supports filtering by product, user, reported status
 app.get('/api/reviews', async (req, res) => {
   try {
     const { productId, userId, reported } = req.query
@@ -751,42 +742,60 @@ app.get('/api/reviews', async (req, res) => {
   }
 })
 
+// 🔥 UPGRADED POST review - Smart verification with orderId binding
 app.post('/api/reviews', async (req, res) => {
-  const { productId, userId, userName, rating, comment } = req.body
+  // 🔥 NEW: Accept orderId from request body
+  const { productId, orderId, userId, userName, rating, comment } = req.body
 
   if (!productId || !userId || !comment?.trim()) {
     return res.status(400).json({ success: false, error: 'Product ID, User ID and Comment are required.' })
   }
 
   try {
-    const { data: deliveredOrders } = await supabase
-      .from('orders')
-      .select('items')
-      .eq('user_id', userId)
-      .eq('status', 'delivered')
-
     let isVerified = false
-    if (deliveredOrders && deliveredOrders.length > 0) {
-      for (const order of deliveredOrders) {
-        if (order.items && order.items.some(item => Number(item.productId) === Number(productId))) {
+    
+    // If rating is provided (coming from order history with star rating)
+    if (rating && rating > 0) {
+      if (orderId) {
+        // Strictly verify that this order belongs to the user and is delivered
+        const { data: ord } = await supabase
+          .from('orders')
+          .select('status, items')
+          .eq('id', orderId)
+          .eq('user_id', userId)
+          .single()
+        
+        if (ord && ord.status === 'delivered' && ord.items?.some(i => Number(i.productId) === Number(productId))) {
           isVerified = true
-          break
         }
       }
-    }
-
-    if (!isVerified && rating && rating > 0) {
-      return res.status(403).json({
-        success: false,
-        error: 'Only verified buyers can leave a star rating. You can still leave a comment.'
-      })
+      if (!isVerified) {
+        return res.status(403).json({ 
+          success: false, 
+          error: 'Invalid order or order not delivered yet.' 
+        })
+      }
+    } else {
+      // Just a text comment (rating is null), check if they ever bought this product
+      const { data: deliveredOrders } = await supabase
+        .from('orders')
+        .select('items')
+        .eq('user_id', userId)
+        .eq('status', 'delivered')
+      
+      if (deliveredOrders) {
+        isVerified = deliveredOrders.some(order => 
+          order.items?.some(item => Number(item.productId) === Number(productId))
+        )
+      }
     }
 
     const { data, error } = await supabase.from('reviews').insert({
       product_id: parseInt(productId),
+      order_id: orderId ? parseInt(orderId) : null, // 🔥 Bind the specific order ID
       user_id: userId,
       user_name: userName || 'Anonymous',
-      rating: isVerified && rating ? parseInt(rating) : null,
+      rating: (isVerified && rating) ? parseInt(rating) : null,
       comment: comment.trim(),
       status: 'approved',
       is_verified_purchase: isVerified,
@@ -796,8 +805,12 @@ app.post('/api/reviews', async (req, res) => {
     }).select().single()
 
     if (error) {
+      // Prevent duplicate review for the same order and product
       if (error.code === '23505') {
-        return res.status(409).json({ success: false, error: 'You have already reviewed this item.' })
+        return res.status(409).json({ 
+          success: false, 
+          error: 'You have already reviewed this item for this specific order.' 
+        })
       }
       throw error
     }
@@ -910,7 +923,7 @@ app.delete('/api/reviews/:id', async (req, res) => {
 })
 
 // ============================================================================
-// ── 404 for API routes (🔥 FIXED: changed '/api/*' to '/api') ──────────────
+// ── 404 for API routes ────────────────────────────────────────────────────
 // ============================================================================
 app.use('/api', (_req, res) => {
   res.status(404).json({ success: false, error: 'API endpoint not found' })
@@ -920,14 +933,12 @@ app.use('/api', (_req, res) => {
 // ── STATIC FILE SERVING FOR PRODUCTION (AFTER ALL API ROUTES) ──────────────
 // ============================================================================
 
-// 🔥 Serve the built Vue frontend files
 const frontendDistPath = path.join(process.cwd(), '../florist_website/dist')
 app.use(express.static(frontendDistPath))
 
 // ============================================================================
-// ── CATCH-ALL ROUTE FOR VUE ROUTER HISTORY MODE (🔥 FIXED: changed '*' to '/(.*)')
+// ── CATCH-ALL ROUTE FOR VUE ROUTER HISTORY MODE ─────────────────────────────
 // ============================================================================
-// All non-API requests go to index.html so Vue Router can handle them
 app.use((req, res) => {
   res.sendFile(path.join(frontendDistPath, 'index.html'))
 })
@@ -938,7 +949,6 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ success: false, error: 'Internal server error' })
 })
 
-// ── Start ─────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`
   ╔══════════════════════════════════════╗
@@ -947,7 +957,7 @@ app.listen(PORT, () => {
   ║   Database: Supabase PostgreSQL      ║
   ║   Auth    : Supabase GoTrue          ║
   ║   Storage : Supabase Bucket          ║
-  ║   Reviews : Post-Moderation + Likes  ║
+  ║   Reviews : Order ID Binding Active  ║
   ║   Users   : RBAC + Analytics         ║
   ║   Static  : Vue Frontend Serving     ║
   ╚══════════════════════════════════════╝

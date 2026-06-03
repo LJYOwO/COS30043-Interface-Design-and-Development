@@ -61,6 +61,16 @@
         <div class="flex flex-col pt-2">
           <h1 class="text-4xl sm:text-5xl font-serif font-bold text-ink mb-4 leading-tight drop-shadow-sm">{{ product.name }}</h1>
           
+          <!-- Average rating display under title -->
+          <div v-if="avgRating" class="flex items-center gap-2 mb-4">
+            <div class="flex text-sm">
+              <span v-for="n in 5" :key="n" :class="n <= Math.round(avgRating) ? 'text-[#CE8280]' : 'text-cream-200'">★</span>
+            </div>
+            <a href="#reviews" class="text-xs font-bold text-ink/50 hover:text-[#CE8280] transition-colors underline-offset-2 hover:underline cursor-pointer">
+              {{ avgRating }} / 5.0 ({{ ratedReviewsCount }} verified ratings)
+            </a>
+          </div>
+
           <div class="flex items-center gap-4 mb-6">
             <span class="text-3xl font-bold text-[#CE8280]">RM {{ parseFloat(product.price).toFixed(2) }}</span>
             <span v-if="product.stock > 0" class="px-3 py-1.5 bg-[#9DB6A0]/20 text-[#486B4C] border border-[#9DB6A0]/30 text-[10px] rounded-full font-bold uppercase tracking-wider shadow-sm">
@@ -135,38 +145,39 @@
       </div>
 
       <!-- ════════════════════════════════════════════════════════════════════
-           COMMUNITY REVIEWS SECTION
+           COMMUNITY REVIEWS SECTION 
       ════════════════════════════════════════════════════════════════════════ -->
-      <div v-if="product" class="mt-20 pt-16 border-t border-[#CE8280]/20">
+      <div id="reviews" v-if="product" class="mt-20 pt-16 border-t border-[#CE8280]/20">
         <div class="text-center mb-10">
           <p class="text-[10px] font-bold text-[#9DB6A0] uppercase tracking-widest mb-2">Community Voice</p>
-          <h2 class="font-serif text-3xl font-bold text-ink">Reviews & Stories</h2>
+          <h2 class="font-serif text-3xl font-bold text-ink mb-4">Reviews & Stories</h2>
+          
+          <div v-if="avgRating" class="inline-flex items-center gap-3 px-5 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/50 shadow-sm">
+            <span class="text-[#CE8280] font-serif font-bold text-lg leading-none">{{ avgRating }}</span>
+            <div class="flex text-sm">
+              <span v-for="n in 5" :key="n" :class="n <= Math.round(avgRating) ? 'text-[#CE8280]' : 'text-cream-200'">★</span>
+            </div>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-ink/40 border-l border-cream-200 pl-3">
+              Based on {{ ratedReviewsCount }} verified ratings
+            </span>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
-          <!-- ── Review Submission Form ───────────────────────────────────── -->
+          <!-- ── Pure Comment Submission Form (No Rating Stars) ───────────────── -->
           <div class="lg:col-span-1">
             <div class="bg-white/60 backdrop-blur-xl p-6 rounded-3xl border border-white/50 shadow-[0_8px_30px_rgba(0,0,0,0.03)] sticky top-24">
               <h3 class="font-serif text-lg font-bold text-ink mb-2">Leave a Note</h3>
-              <p class="text-xs text-ink/50 font-medium mb-6">Bought this bloom? Leave a rating. Just browsing? Feel free to drop a comment!</p>
-              
-              <!-- Rating Stars -->
-              <div class="mb-4">
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-ink/60 mb-2">Rating (Verified Only)</label>
-                <div class="flex gap-1">
-                  <button v-for="star in 5" :key="star" @click="reviewDraft.rating = star"
-                    class="text-2xl transition-transform hover:scale-110 focus:outline-none"
-                    :class="star <= reviewDraft.rating ? 'text-[#CE8280]' : 'text-white drop-shadow-none'">
-                    ★
-                  </button>
-                </div>
-              </div>
+              <p class="text-xs text-ink/50 font-medium mb-6">Share your thoughts or ask a question about this bloom!</p>
 
-              <!-- Comment Input -->
+              <!-- 🔥 FIX 1: Added ref="commentInputRef" to textarea -->
               <div class="mb-5">
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-ink/60 mb-2">Your Story *</label>
-                <textarea v-model="reviewDraft.comment" rows="4" placeholder="Beautiful arrangement, smells amazing..."
+                <textarea 
+                  ref="commentInputRef" 
+                  v-model="reviewDraft.comment" 
+                  rows="4" 
+                  placeholder="Beautiful arrangement, smells amazing..."
                   class="w-full px-4 py-3 bg-white/80 border border-transparent rounded-xl text-sm focus:outline-none focus:border-[#CE8280]/40 focus:ring-2 focus:ring-[#CE8280]/10 transition-all shadow-inner resize-none text-ink/80 font-medium"
                 ></textarea>
               </div>
@@ -204,8 +215,9 @@
                         Verified Buyer ✓
                       </span>
                     </div>
-                    <div v-if="review.rating" class="flex text-[#CE8280] text-xs mt-0.5">
-                      <span v-for="n in review.rating" :key="n">★</span>
+                    <!-- Display rating stars for verified buyer reviews -->
+                    <div v-if="review.rating && review.rating > 0" class="flex text-xs mt-0.5">
+                      <span v-for="n in 5" :key="n" :class="n <= review.rating ? 'text-[#CE8280]' : 'text-cream-200'">★</span>
                     </div>
                   </div>
                 </div>
@@ -222,24 +234,31 @@
               </div>
               <p v-else class="text-sm text-ink/70 leading-relaxed font-medium mb-4">{{ review.comment }}</p>
 
-              <!-- Review Actions (Like, Edit, Delete, Report) -->
+              <!-- 🔥 FIX 2: Review Actions with Reply Button -->
               <div class="flex items-center justify-between border-t border-cream-100 pt-3">
                 
-                <!-- 🔥 Like Button with Real API Call -->
+                <!-- Like Button -->
                 <button @click="toggleLike(review)" class="flex items-center gap-1.5 text-xs font-bold transition-colors" :class="review._liked ? 'text-rose-500' : 'text-ink/40 hover:text-rose-400'">
                   <span class="text-base transition-transform" :class="review._liked ? 'scale-110 animate-bounce' : ''">{{ review._liked ? '♥' : '♡' }}</span>
                   <span>{{ review._likesCount }}</span>
                 </button>
 
-                <!-- Owner Actions (Edit/Delete) -->
-                <div v-if="userStore.user?.id === review.userId" class="flex gap-3">
-                  <button @click="startEdit(review)" class="text-[10px] font-bold uppercase tracking-widest text-ink/40 hover:text-[#CE8280] transition-colors">Edit</button>
-                  <button @click="deleteReview(review.id)" class="text-[10px] font-bold uppercase tracking-widest text-ink/40 hover:text-rose-500 transition-colors">Delete</button>
-                </div>
-                
-                <!-- Report Button (for other users) -->
-                <div v-else-if="userStore.isLoggedIn">
-                  <button @click="openReport(review.id)" class="text-[10px] font-bold uppercase tracking-widest text-ink/30 hover:text-rose-500 transition-colors">⚠ Report</button>
+                <div class="flex items-center gap-4">
+                  <!-- Reply Button -->
+                  <button @click="replyTo(review)" class="text-[10px] font-bold uppercase tracking-widest text-ink/40 hover:text-[#CE8280] transition-colors flex items-center gap-1">
+                    <span>↩ Reply</span>
+                  </button>
+
+                  <!-- Owner Actions (Edit/Delete) -->
+                  <div v-if="userStore.user?.id === review.userId" class="flex gap-3 border-l border-cream-200 pl-4">
+                    <button @click="startEdit(review)" class="text-[10px] font-bold uppercase tracking-widest text-ink/40 hover:text-[#CE8280] transition-colors">Edit</button>
+                    <button @click="deleteReview(review.id)" class="text-[10px] font-bold uppercase tracking-widest text-ink/40 hover:text-rose-500 transition-colors">Delete</button>
+                  </div>
+                  
+                  <!-- Report Button (for other users) -->
+                  <div v-else-if="userStore.isLoggedIn" class="border-l border-cream-200 pl-4">
+                    <button @click="openReport(review.id)" class="text-[10px] font-bold uppercase tracking-widest text-ink/30 hover:text-rose-500 transition-colors">⚠ Report</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -298,15 +317,22 @@ const currentImage = ref(null)
 const qty = ref(1)
 const selectedSize = ref(null)
 
-// ── Review State ──────────────────────────────────────────────────────────
+// ── Review State (Comment Only - No Rating) ────────────────────────────────
 const reviews = ref([])
 const reviewsLoading = ref(true)
 const avgRating = ref(null)
+
+// Rated reviews count
+const ratedReviewsCount = computed(() => reviews.value.filter(r => r.rating && r.rating > 0).length)
+
 const submitting = ref(false)
-const reviewDraft = ref({ rating: 0, comment: '' })
+const reviewDraft = ref({ comment: '' })
 const editingId = ref(null)
 const editDraft = ref('')
 const toast = ref({ show: false, message: '', type: 'success' })
+
+// 🔥 FIX 3: Add ref for textarea and reply function
+const commentInputRef = ref(null)
 
 // ── Report State ──────────────────────────────────────────────────────────
 const reportReasons = ['Spam / Advertising', 'Inappropriate Language', 'Off-topic', 'Harassment', 'Other']
@@ -392,10 +418,10 @@ function addToCart() {
   showToast('Added to cart! 🌸')
 }
 
-// ── Review CRUD Operations ─────────────────────────────────────────────────
+// ── Review CRUD Operations (Comment Only) ─────────────────────────────────
 async function submitReview() {
   if (!userStore.isLoggedIn) {
-    showToast('Please sign in to leave a review.', 'error')
+    showToast('Please sign in to leave a comment.', 'error')
     return
   }
   if (!reviewDraft.value.comment.trim()) {
@@ -412,23 +438,19 @@ async function submitReview() {
         productId: product.value.id,
         userId: userStore.user.id,
         userName: userStore.displayName,
-        rating: reviewDraft.value.rating || null,
+        rating: null,  // Force null - no rating for unverified users
         comment: reviewDraft.value.comment
       })
     })
     const json = await res.json()
     
     if (!res.ok) {
-      if (res.status === 403) {
-        reviewDraft.value.rating = 0
-        throw new Error('Only verified buyers can leave a star rating. Your comment has been submitted without stars!')
-      }
       throw new Error(json.error || 'Submission failed')
     }
     
-    showToast('Your review has been posted! 🌸')
-    reviewDraft.value = { rating: 0, comment: '' }
-    await fetchReviews()
+    showToast('Your comment has been posted! 🌸')
+    reviewDraft.value.comment = ''  // Clear input
+    await fetchReviews()  // Refresh list
   } catch (err) {
     showToast(err.message, 'error')
   } finally {
@@ -448,28 +470,28 @@ async function saveEdit(review) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ comment: editDraft.value })
     })
-    if (!res.ok) throw new Error('Failed to update review')
+    if (!res.ok) throw new Error('Failed to update comment')
     review.comment = editDraft.value
     editingId.value = null
-    showToast('Review updated successfully')
+    showToast('Comment updated successfully')
   } catch (err) {
     showToast(err.message, 'error')
   }
 }
 
 async function deleteReview(id) {
-  if (!confirm('Are you sure you want to delete this review?')) return
+  if (!confirm('Are you sure you want to delete this comment?')) return
   try {
     const res = await fetch(`/api/reviews/${id}`, { method: 'DELETE' })
-    if (!res.ok) throw new Error('Failed to delete review')
+    if (!res.ok) throw new Error('Failed to delete comment')
     reviews.value = reviews.value.filter(r => r.id !== id)
-    showToast('Review deleted successfully')
+    showToast('Comment deleted successfully')
   } catch (err) {
     showToast(err.message, 'error')
   }
 }
 
-// 🔥 Toggle Like with Real API Call
+// Toggle Like with Real API Call
 async function toggleLike(review) {
   if (!userStore.isLoggedIn) {
     showToast('Sign in to like comments.', 'error')
@@ -491,11 +513,9 @@ async function toggleLike(review) {
     if (!res.ok) throw new Error('Failed to toggle like')
     
     const json = await res.json()
-    // Sync with server response to ensure accuracy
     review._liked = (json.data.likedBy || []).includes(userStore.user.id)
     review._likesCount = json.data.likesCount
   } catch (err) {
-    // Revert optimistic update on failure
     review._liked = originalLiked
     review._likesCount = originalLikesCount
     showToast('Network error, please try again.', 'error')
@@ -522,6 +542,26 @@ async function submitReport() {
     reportModal.value.show = false
   } catch (err) {
     showToast(err.message, 'error')
+  }
+}
+
+// 🔥 New: Reply to comment function with smooth scroll and auto-focus
+function replyTo(review) {
+  if (!userStore.isLoggedIn) {
+    showToast('Please sign in to reply.', 'error')
+    return
+  }
+  
+  // Auto-fill the comment input with @username
+  reviewDraft.value.comment = `@${review.userName} `
+  
+  // Smooth scroll to the comment input and auto-focus
+  if (commentInputRef.value) {
+    commentInputRef.value.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // Wait for scroll to complete, then focus
+    setTimeout(() => {
+      commentInputRef.value.focus()
+    }, 500)
   }
 }
 
