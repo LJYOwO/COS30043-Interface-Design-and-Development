@@ -1,11 +1,10 @@
 <template>
   <div class="min-h-screen flex flex-col" style="background: linear-gradient(160deg, #FDFBF7 0%, #F9E5E5 40%, #EAE2FE 100%);">
 
-    <!-- ── Header (🔥 FIXED: Fully responsive for mobile) ──────────────── -->
+    <!-- ── Header ─────────────────────────────────────────────────────── -->
     <div class="sticky top-0 z-30 backdrop-blur-md border-b border-white/40 bg-white/85">
       <div class="max-w-7xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-3 overflow-x-auto hide-scrollbar">
         
-        <!-- Brand / Info -->
         <div class="flex items-center gap-2 flex-shrink-0">
           <span class="text-xl">💐</span>
           <div class="hidden sm:block">
@@ -14,7 +13,6 @@
           </div>
         </div>
 
-        <!-- Vase switcher -->
         <div class="flex items-center gap-1.5 flex-shrink-0">
           <span class="text-[10px] text-ink/40 mr-1 hidden sm:inline">Vessel:</span>
           <button
@@ -30,7 +28,6 @@
           </button>
         </div>
 
-        <!-- Actions -->
         <div class="flex items-center gap-1.5 flex-shrink-0">
           <button
             class="px-3 py-1.5 rounded-full text-[10px] sm:text-xs border border-cream-200 text-ink/50 hover:text-ink hover:border-[#CE8280]/40 transition-all"
@@ -54,17 +51,17 @@
     <!-- ── Main Layout ─────────────────────────────────────────────────── -->
     <div class="flex-1 flex flex-col lg:flex-row max-w-7xl mx-auto w-full px-4 sm:px-6 py-4 sm:py-6 gap-6">
 
-      <!-- ══ LEFT: Canvas (🔥 FIXED: Scaled properly for Mobile) ═══════ -->
+      <!-- ══ LEFT: Canvas ═══════════════════════════════════════════════ -->
       <div class="flex-1 flex flex-col items-center justify-start overflow-hidden">
 
-        <!-- Responsive Wrapper: Shrinks to 75% on mobile to fit 375px screens -->
-        <div class="w-full flex justify-center items-start h-[390px] sm:h-auto pt-2 sm:pt-0">
+        <!-- 🔥 FIXED: Responsive Wrapper - Centered on mobile -->
+      <div class="w-full relative min-h-[420px] sm:min-h-[550px] overflow-hidden">
           <div
-            class="relative select-none transform scale-[0.75] sm:scale-100 origin-top transition-transform"
+            class="absolute left-1/2 top-4 sm:top-1/2 -translate-x-1/2 sm:-translate-y-1/2 select-none transform scale-[0.75] sm:scale-100 origin-top sm:origin-center transition-transform"
             :style="{ width: canvasW + 'px', height: canvasH + 'px' }"
           >
             <!-- ═══ LAYER 1 — Vase BACK body (z:1) ══════════ -->
-            <svg :width="canvasW" :height="canvasH" viewBox="0 0 400 520"
+<svg :width="canvasW" :height="canvasH" viewBox="0 0 400 520"
                  class="absolute inset-0" style="z-index:1">
               <defs>
                 <linearGradient id="vaseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -89,21 +86,17 @@
 
               <template v-if="currentVase.id === 'classic'">
                 <ellipse cx="200" cy="430" rx="95" ry="18" fill="#D4B5B4" opacity="0.5"/>
-                <path d="M120,260 L280,260 Q285,285 285,310 Q295,420 270,445 Q200,465 130,445 Q105,420 115,310 Q115,285 120,260 Z"
-                      fill="url(#vaseGrad)" stroke="#C97A79" stroke-width="1.5"/>
-                <path d="M130,330 Q125,380 135,420" stroke="white" stroke-width="4" stroke-linecap="round" opacity="0.5"/>
+                <ellipse cx="200" cy="260" rx="80" ry="8" fill="#C97A79" opacity="0.2"/>
               </template>
 
               <template v-if="currentVase.id === 'wide'">
                 <ellipse cx="200" cy="445" rx="115" ry="16" fill="#7D9E81" opacity="0.4"/>
-                <path d="M85,278 L315,278 L315,295 Q320,430 300,448 Q200,470 100,448 Q80,430 85,295 Z"
-                      fill="url(#wideGrad)" stroke="#7D9E81" stroke-width="1.5"/>
-                <path d="M105,330 Q100,390 108,430" stroke="white" stroke-width="5" stroke-linecap="round" opacity="0.4"/>
+                <ellipse cx="200" cy="278" rx="115" ry="10" fill="#5F7A63" opacity="0.2"/>
               </template>
 
               <template v-if="currentVase.id === 'posy'">
-                <path d="M148,368 L120,460 Q200,475 280,460 L252,368 Z"
-                      fill="url(#posyGrad)" stroke="#C9A227" stroke-width="1"/>
+                <ellipse cx="200" cy="460" rx="80" ry="12" fill="#D4C494" opacity="0.4"/>
+                <ellipse cx="200" cy="260" rx="70" ry="6" fill="#A8831A" opacity="0.15"/>
               </template>
             </svg>
 
@@ -147,7 +140,6 @@
                     style="transform-origin: bottom center;"
                     @click.stop="removeFlower(i)"
                   >
-                    <!-- 🔥 FIXED: IMAGE mode with bottom alignment -->
                     <template v-if="slot.flower.imageUrl">
                       <img
                         :src="slot.flower.imageUrl"
@@ -164,7 +156,6 @@
                       />
                     </template>
 
-                    <!-- EMOJI mode -->
                     <template v-else>
                       <div
                         class="rounded-full flex-shrink-0"
@@ -188,7 +179,6 @@
                       </div>
                     </template>
 
-                    <!-- Elegant glassmorphism remove tooltip -->
                     <div
                       class="absolute opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-white/80 backdrop-blur-sm text-[#CE8280] border border-white/60 shadow-sm font-bold tracking-widest uppercase text-[8px] px-2 py-1 rounded-full whitespace-nowrap"
                       :style="{
@@ -208,10 +198,14 @@
             </div>
 
             <!-- ═══ LAYER 3 — Vase FRONT rim/neck (z:100) ═ -->
-            <svg :width="canvasW" :height="canvasH" viewBox="0 0 400 520"
+<svg :width="canvasW" :height="canvasH" viewBox="0 0 400 520"
                  class="absolute inset-0 pointer-events-none" style="z-index:100">
 
               <template v-if="currentVase.id === 'classic'">
+                <path d="M120,260 L280,260 Q285,285 285,310 Q295,420 270,445 Q200,465 130,445 Q105,420 115,310 Q115,285 120,260 Z"
+                      fill="url(#vaseGrad)" stroke="#C97A79" stroke-width="1.5"/>
+                <path d="M130,330 Q125,380 135,420" stroke="white" stroke-width="4" stroke-linecap="round" opacity="0.5"/>
+                
                 <path d="M120,260 L280,260 Q285,285 285,310 Q200,332 115,310 Q115,285 120,260 Z"
                       fill="url(#neckGrad)" stroke="#C97A79" stroke-width="1.5"/>
                 <line x1="120" y1="260" x2="280" y2="260" stroke="#C97A79" stroke-width="1.5"/>
@@ -219,6 +213,10 @@
               </template>
 
               <template v-if="currentVase.id === 'wide'">
+                <path d="M85,278 L315,278 L315,295 Q320,430 300,448 Q200,470 100,448 Q80,430 85,295 Z"
+                      fill="url(#wideGrad)" stroke="#7D9E81" stroke-width="1.5"/>
+                <path d="M105,330 Q100,390 108,430" stroke="white" stroke-width="5" stroke-linecap="round" opacity="0.4"/>
+                
                 <path d="M85,278 L315,278 L315,295 Q200,315 85,295 Z"
                       fill="url(#wideGrad)" stroke="#7D9E81" stroke-width="1.5"/>
                 <line x1="85" y1="278" x2="315" y2="278" stroke="#7D9E81" stroke-width="1.5"/>
@@ -226,6 +224,9 @@
               </template>
 
               <template v-if="currentVase.id === 'posy'">
+                <path d="M148,368 L120,460 Q200,475 280,460 L252,368 Z"
+                      fill="url(#posyGrad)" stroke="#C9A227" stroke-width="1"/>
+                
                 <path d="M130,260 L270,260 L252,372 Q200,380 148,372 Z"
                       fill="url(#posyGrad)" stroke="#C9A227" stroke-width="1.5"/>
                 <line x1="130" y1="260" x2="148" y2="372" stroke="#C9A227" stroke-width="1" opacity="0.4"/>
@@ -260,7 +261,6 @@
       <!-- ══ RIGHT: Flower Picker ════════════════════════════════════════ -->
       <div class="w-full lg:w-72 xl:w-80 flex flex-col gap-4">
 
-        <!-- 🔥 FIXED: Category tabs - changed green to blush pink -->
         <div class="flex flex-wrap gap-1.5">
           <button
             v-for="cat in categories"
@@ -275,18 +275,15 @@
           </button>
         </div>
 
-        <!-- Loading skeletons -->
         <div v-if="flowersLoading" class="space-y-2">
           <div v-for="n in 6" :key="n" class="h-16 rounded-2xl animate-pulse" style="background:#FAF6EE" />
         </div>
 
-        <!-- Error -->
         <div v-else-if="flowersError" class="text-center py-6 rounded-2xl text-xs text-ink/50" style="background:#FAF6EE">
           <p class="mb-2">⚠️ {{ flowersError }}</p>
           <button class="text-sage underline" @click="fetchFlowers">Retry</button>
         </div>
 
-        <!-- Flower list -->
         <div v-else class="flex flex-col gap-2 overflow-y-auto pr-1" style="max-height:420px">
           <div
             v-for="flower in filteredFlowers"
@@ -338,16 +335,13 @@
           </p>
         </div>
 
-        <!-- Hint -->
         <p class="text-[10px] text-ink/30 text-center leading-relaxed">
           Click <strong>+</strong> to quick-add · Drag flower onto a slot · Click a placed flower to remove it
         </p>
 
-        <!-- ── Summary ─────────────────────────────────────────────────── -->
         <div class="rounded-3xl p-4 border border-cream-200 space-y-3 mt-auto shadow-sm" style="background:rgba(255,255,255,0.85)">
           <h4 class="font-serif text-sm font-semibold text-ink">Your Bouquet</h4>
 
-          <!-- Flower breakdown -->
           <div class="space-y-1 max-h-32 overflow-y-auto hide-scrollbar">
             <div
               v-for="(count, name) in flowerCounts"
@@ -390,7 +384,6 @@
       </div>
     </div>
 
-    <!-- ── Toast ──────────────────────────────────────────────────────── -->
     <Transition name="toast">
       <div
         v-if="toast.show"
@@ -414,65 +407,63 @@ const canvasW   = 420
 const canvasH   = 520
 const SLOT_SIZE = 72
 
-// Flower image dimensions (adjust based on your actual image assets)
+// Flower image dimensions
 const FLOWER_IMG_WIDTH = 70
-const FLOWER_IMG_HEIGHT = 140  // Stem touches bottom edge
+const FLOWER_IMG_HEIGHT = 140
 
-// ── Vase styles ───────────────────────────────────────────────────────────
+// ── Vase styles with two rows of slots ────────────────────────────────────
 const vaseStyles = [
   {
     id:      'classic',
     name:    'Classic',
     icon:    '🏺',
-    slots:   9,
+    slots:   18,
     rimYPct: 50,
     slotPositions: [
-      [50, 57,   0],
-      [43, 50, -12],
-      [57, 50,  12],
-      [40, 50, -22],
-      [60, 50,  22],
-      [46, 57,  -6],
-      [54, 57,   6],
-      [44, 50, -16],
-      [56, 50,  16],
+      // Upper row
+      [50, 57,   0], [43, 50, -12], [57, 50,  12],
+      [40, 50, -22], [60, 50,  22], [46, 57,  -6],
+      [54, 57,   6], [44, 50, -16], [56, 50,  16],
+      // Lower row - one head shorter
+      [50, 67,   0], [43, 60, -10], [57, 60,  10],
+      [40, 60, -18], [60, 60,  18], [46, 67,  -5],
+      [54, 67,   5], [44, 60, -12], [56, 60,  12],
     ],
   },
   {
     id:      'wide',
     name:    'Wide',
     icon:    '🪣',
-    slots:   12,
+    slots:   24,
     rimYPct: 53.5,
     slotPositions: [
-      [50, 53.5,   0],
-      [43, 53.5, -10],
-      [57, 53.5,  10],
-      [35, 53.5, -22],
-      [65, 53.5,  22],
-      [28, 53.5, -34],
-      [72, 53.5,  34],
-      [46, 53.5,  -5],
-      [54, 53.5,   5],
-      [39, 53.5, -16],
-      [61, 53.5,  16],
-      [50, 53.5,   0],
+      // Upper row
+      [50, 53.5,   0], [43, 53.5, -10], [57, 53.5,  10],
+      [35, 53.5, -22], [65, 53.5,  22], [28, 53.5, -34],
+      [72, 53.5,  34], [46, 53.5,  -5], [54, 53.5,   5],
+      [39, 53.5, -16], [61, 53.5,  16], [50, 53.5,   0],
+      // Lower row - one head shorter
+      [50, 65,   0], [43, 65,  -8], [57, 65,   8],
+      [35, 65, -18], [65, 65,  18], [28, 65, -28],
+      [72, 65,  28], [46, 65,  -4], [54, 65,   4],
+      [39, 65, -12], [61, 65,  12], [50, 65,   0],
     ],
   },
   {
     id:      'posy',
     name:    'Posy',
     icon:    '💝',
-    slots:   7,
+    slots:   14,
     rimYPct: 50,
     slotPositions: [
-      [50, 50,   0],
-      [44, 50, -14],
-      [56, 50,  14],
-      [40, 50, -26],
-      [60, 50,  26],
-      [47, 50,  -7],
+      // Upper row
+      [50, 50,   0], [44, 50, -14], [56, 50,  14],
+      [40, 50, -26], [60, 50,  26], [47, 50,  -7],
       [53, 50,   7],
+      // Lower row - one head shorter
+      [50, 62,   0], [44, 62, -12], [56, 62,  12],
+      [40, 62, -22], [60, 62,  22], [47, 62,  -6],
+      [53, 62,   6],
     ],
   },
 ]
@@ -490,12 +481,20 @@ function getRimPx() {
 
 function slotStyle(i) {
   const [xPct, rawYPct, angle = 0] = currentVase.value.slotPositions[i] ?? [50, 50, 0]
-  const rimPx = getRimPx()
-
-  // Position container so its BOTTOM aligns with the vase rim
-  const bottomY = rimPx + 5
-  const topPx = bottomY - SLOT_SIZE
   
+  const rimPx = getRimPx() // 获取当前花瓶的瓶口 Y 坐标物理高度（经典款约为 260px）
+
+  // 【核心机制 1】：将巨大的百分比差距，缩小为柔和的“像素下沉量” (乘以 2.5 倍数)
+  // 这样第二排依然会比第一排矮，但绝对不会掉进深渊
+  const dropAmount = (rawYPct - (currentVase.value.rimYPct || 50)) * 2.5
+
+  // 【核心机制 2】：强制锚定花的底部 (Bottom)
+  // 让所有的花，其茎部最底端刚好插进瓶口往下 15 像素（刚好被瓶口遮住一点点，防止悬空穿帮）
+  const bottomPx = rimPx + 15 + dropAmount
+
+  // 因为插槽 div 自身的高度是 SLOT_SIZE (72)，推算出最终的 Top
+  const topPx = bottomPx - SLOT_SIZE
+
   return {
     left: `${(xPct / 100) * canvasW - SLOT_SIZE / 2}px`,
     top: `${topPx}px`,
@@ -690,7 +689,6 @@ function showToast(message, type = 'success') {
 </script>
 
 <style scoped>
-/* 隐藏原生滚动条，保持毛玻璃的整洁感 */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -699,7 +697,6 @@ function showToast(message, type = 'success') {
   scrollbar-width: none;
 }
 
-/* Bloom Animation */
 .bloom-enter-active {
   animation: bloomIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   transform-origin: bottom center;
@@ -718,7 +715,6 @@ function showToast(message, type = 'success') {
   100% { opacity: 0; transform: scale(0); }
 }
 
-/* Toast Animation */
 .toast-enter-active { transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .toast-leave-active  { transition: all 0.2s ease; }
 .toast-enter-from,
