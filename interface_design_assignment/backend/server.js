@@ -453,7 +453,13 @@ app.get('/api/products', async (req, res) => {
 
 app.get('/api/products/:id', async (req, res) => {
   try {
-    const { data, error } = await supabase.from('products').select('*').eq('id', req.params.id).single()
+    // 🔥 FIX: Convert ID to integer for proper matching
+    const productId = parseInt(req.params.id)
+    if (isNaN(productId)) {
+      return res.status(400).json({ success: false, error: 'Invalid product ID format' })
+    }
+    
+    const { data, error } = await supabase.from('products').select('*').eq('id', productId).single()
     if (error) return res.status(404).json({ success: false, error: 'Product not found' })
     res.json({ success: true, data: mapProduct(data) })
   } catch (e) { res.status(500).json({ success: false, error: e.message }) }
@@ -500,6 +506,12 @@ app.post('/api/products', async (req, res) => {
 
 app.patch('/api/products/:id', async (req, res) => {
   try {
+    // 🔥 FIX: Convert ID to integer for proper matching
+    const productId = parseInt(req.params.id)
+    if (isNaN(productId)) {
+      return res.status(400).json({ success: false, error: 'Invalid product ID format' })
+    }
+    
     const fieldMap = {
       name: 'name', slug: 'slug', category: 'category', price: 'price',
       stock: 'stock', status: 'status', emoji: 'emoji', bg: 'bg',
@@ -518,7 +530,7 @@ app.patch('/api/products/:id', async (req, res) => {
     const { data, error } = await supabase
       .from('products')
       .update(updates)
-      .eq('id', req.params.id)
+      .eq('id', productId)
       .select()
 
     if (error) {
@@ -529,7 +541,7 @@ app.patch('/api/products/:id', async (req, res) => {
     if (!data || data.length === 0) {
       return res.status(404).json({
         success: false,
-        error: `Product with ID ${req.params.id} does not exist in the database.`
+        error: `Product with ID ${productId} does not exist in the database.`
       })
     }
 
@@ -542,7 +554,13 @@ app.patch('/api/products/:id', async (req, res) => {
 
 app.delete('/api/products/:id', async (req, res) => {
   try {
-    const { error } = await supabase.from('products').delete().eq('id', req.params.id)
+    // 🔥 FIX: Convert ID to integer for proper matching
+    const productId = parseInt(req.params.id)
+    if (isNaN(productId)) {
+      return res.status(400).json({ success: false, error: 'Invalid product ID format' })
+    }
+    
+    const { error } = await supabase.from('products').delete().eq('id', productId)
     if (error) return res.status(404).json({ success: false, error: 'Product not found' })
     res.json({ success: true, message: 'Product deleted' })
   } catch (e) { res.status(500).json({ success: false, error: e.message }) }
@@ -588,6 +606,12 @@ app.post('/api/flowers', async (req, res) => {
 
 app.patch('/api/flowers/:id', async (req, res) => {
   try {
+    // Convert ID to integer
+    const flowerId = parseInt(req.params.id)
+    if (isNaN(flowerId)) {
+      return res.status(400).json({ success: false, error: 'Invalid flower ID format' })
+    }
+    
     const fieldMap = {
       name: 'name', emoji: 'emoji', category: 'category', origin: 'origin',
       price: 'price', stock: 'stock', vaseLife: 'vase_life', scent: 'scent',
@@ -597,7 +621,7 @@ app.patch('/api/flowers/:id', async (req, res) => {
     for (const [c, s] of Object.entries(fieldMap)) {
       if (req.body[c] !== undefined) updates[s] = req.body[c]
     }
-    const { data, error } = await supabase.from('flowers').update(updates).eq('id', req.params.id).select().single()
+    const { data, error } = await supabase.from('flowers').update(updates).eq('id', flowerId).select().single()
     if (error) return res.status(404).json({ success: false, error: 'Flower not found' })
     res.json({ success: true, data: mapFlower(data) })
   } catch (e) { res.status(500).json({ success: false, error: e.message }) }
@@ -605,7 +629,13 @@ app.patch('/api/flowers/:id', async (req, res) => {
 
 app.delete('/api/flowers/:id', async (req, res) => {
   try {
-    const { error } = await supabase.from('flowers').delete().eq('id', req.params.id)
+    // Convert ID to integer
+    const flowerId = parseInt(req.params.id)
+    if (isNaN(flowerId)) {
+      return res.status(400).json({ success: false, error: 'Invalid flower ID format' })
+    }
+    
+    const { error } = await supabase.from('flowers').delete().eq('id', flowerId)
     if (error) return res.status(404).json({ success: false, error: 'Flower not found' })
     res.json({ success: true, message: 'Flower deleted' })
   } catch (e) { res.status(500).json({ success: false, error: e.message }) }
@@ -628,7 +658,13 @@ app.get('/api/orders', async (req, res) => {
 
 app.get('/api/orders/:id', async (req, res) => {
   try {
-    const { data, error } = await supabase.from('orders').select('*').eq('id', req.params.id).single()
+    // Convert ID to integer
+    const orderId = parseInt(req.params.id)
+    if (isNaN(orderId)) {
+      return res.status(400).json({ success: false, error: 'Invalid order ID format' })
+    }
+    
+    const { data, error } = await supabase.from('orders').select('*').eq('id', orderId).single()
     if (error) return res.status(404).json({ success: false, error: 'Order not found' })
     res.json({ success: true, data: mapOrder(data) })
   } catch (e) { res.status(500).json({ success: false, error: e.message }) }
@@ -684,13 +720,19 @@ app.patch('/api/orders/:id/status', async (req, res) => {
     return res.status(400).json({ success: false, error: `Status must be one of: ${valid.join(', ')}` })
   }
   try {
-    const { data: existing, error: fe } = await supabase.from('orders').select('status, items').eq('id', req.params.id).single()
+    // Convert ID to integer
+    const orderId = parseInt(req.params.id)
+    if (isNaN(orderId)) {
+      return res.status(400).json({ success: false, error: 'Invalid order ID format' })
+    }
+    
+    const { data: existing, error: fe } = await supabase.from('orders').select('status, items').eq('id', orderId).single()
     if (fe) return res.status(404).json({ success: false, error: 'Order not found' })
 
     const stepMap = { processing: 0, prepared: 1, dispatched: 2, delivered: 3, cancelled: -1 }
     const { data, error } = await supabase.from('orders')
       .update({ status, tracking_step: stepMap[status] })
-      .eq('id', req.params.id).select().single()
+      .eq('id', orderId).select().single()
     if (error) throw error
 
     if (status === 'cancelled' && existing.status !== 'cancelled') {
@@ -717,7 +759,11 @@ app.get('/api/reviews', async (req, res) => {
     const { productId, userId, reported } = req.query
     let q = supabase.from('reviews').select('*').order('created_at', { ascending: false })
 
-    if (productId) q = q.eq('product_id', productId)
+    if (productId) {
+      // Convert productId to integer
+      const pid = parseInt(productId)
+      if (!isNaN(pid)) q = q.eq('product_id', pid)
+    }
     if (userId) q = q.eq('user_id', userId)
 
     if (reported === 'true') {
@@ -744,7 +790,7 @@ app.get('/api/reviews', async (req, res) => {
 
 // 🔥 UPGRADED POST review - Smart verification with orderId binding
 app.post('/api/reviews', async (req, res) => {
-  // 🔥 NEW: Accept orderId from request body
+  // Accept orderId from request body
   const { productId, orderId, userId, userName, rating, comment } = req.body
 
   if (!productId || !userId || !comment?.trim()) {
@@ -758,10 +804,11 @@ app.post('/api/reviews', async (req, res) => {
     if (rating && rating > 0) {
       if (orderId) {
         // Strictly verify that this order belongs to the user and is delivered
+        const ordId = parseInt(orderId)
         const { data: ord } = await supabase
           .from('orders')
           .select('status, items')
-          .eq('id', orderId)
+          .eq('id', ordId)
           .eq('user_id', userId)
           .single()
         
@@ -792,7 +839,7 @@ app.post('/api/reviews', async (req, res) => {
 
     const { data, error } = await supabase.from('reviews').insert({
       product_id: parseInt(productId),
-      order_id: orderId ? parseInt(orderId) : null, // 🔥 Bind the specific order ID
+      order_id: orderId ? parseInt(orderId) : null, // Bind the specific order ID
       user_id: userId,
       user_name: userName || 'Anonymous',
       rating: (isVerified && rating) ? parseInt(rating) : null,
@@ -829,10 +876,16 @@ app.post('/api/reviews/:id/like', async (req, res) => {
   }
 
   try {
+    // Convert review ID to integer
+    const reviewId = parseInt(req.params.id)
+    if (isNaN(reviewId)) {
+      return res.status(400).json({ success: false, error: 'Invalid review ID format' })
+    }
+    
     const { data: review, error: fetchErr } = await supabase
       .from('reviews')
       .select('liked_by')
-      .eq('id', req.params.id)
+      .eq('id', reviewId)
       .single()
 
     if (fetchErr) throw fetchErr
@@ -849,7 +902,7 @@ app.post('/api/reviews/:id/like', async (req, res) => {
     const { data, error } = await supabase
       .from('reviews')
       .update({ liked_by: likedBy })
-      .eq('id', req.params.id)
+      .eq('id', reviewId)
       .select()
       .single()
 
@@ -864,6 +917,12 @@ app.post('/api/reviews/:id/like', async (req, res) => {
 
 app.patch('/api/reviews/:id', async (req, res) => {
   try {
+    // Convert review ID to integer
+    const reviewId = parseInt(req.params.id)
+    if (isNaN(reviewId)) {
+      return res.status(400).json({ success: false, error: 'Invalid review ID format' })
+    }
+    
     const updates = {}
 
     if (req.body.rating !== undefined) updates.rating = req.body.rating
@@ -877,7 +936,7 @@ app.patch('/api/reviews/:id', async (req, res) => {
     const { data, error } = await supabase
       .from('reviews')
       .update(updates)
-      .eq('id', req.params.id)
+      .eq('id', reviewId)
       .select()
       .single()
 
@@ -896,10 +955,16 @@ app.post('/api/reviews/:id/report', async (req, res) => {
   }
 
   try {
+    // Convert review ID to integer
+    const reviewId = parseInt(req.params.id)
+    if (isNaN(reviewId)) {
+      return res.status(400).json({ success: false, error: 'Invalid review ID format' })
+    }
+    
     const { data, error } = await supabase
       .from('reviews')
       .update({ is_reported: true, report_reason: reason })
-      .eq('id', req.params.id)
+      .eq('id', reviewId)
       .select()
       .single()
 
@@ -913,7 +978,13 @@ app.post('/api/reviews/:id/report', async (req, res) => {
 
 app.delete('/api/reviews/:id', async (req, res) => {
   try {
-    const { error } = await supabase.from('reviews').delete().eq('id', req.params.id)
+    // Convert review ID to integer
+    const reviewId = parseInt(req.params.id)
+    if (isNaN(reviewId)) {
+      return res.status(400).json({ success: false, error: 'Invalid review ID format' })
+    }
+    
+    const { error } = await supabase.from('reviews').delete().eq('id', reviewId)
     if (error) return res.status(404).json({ success: false, error: 'Review not found' })
     res.json({ success: true, message: 'Review deleted' })
   } catch (e) {
