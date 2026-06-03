@@ -90,7 +90,7 @@
         </div>
       </nav>
 
-      <!-- Mobile dropdown menu -->
+      <!-- 🔥 UPGRADED: Mobile dropdown menu with Dashboard & Logout -->
       <Transition name="slide-down">
         <div v-if="mobileOpen" class="md:hidden bg-white/95 backdrop-blur-md border-t border-cream-100 px-4 pb-4">
           <ul class="flex flex-col gap-1 pt-2">
@@ -104,6 +104,30 @@
                 {{ link.name }}
               </RouterLink>
             </li>
+            
+            <!-- 🔥 ADDED: My Account / Dashboard link for mobile -->
+            <li v-if="userStore.isAuthenticated">
+              <RouterLink
+                to="/dashboard"
+                @click="mobileOpen = false"
+                class="block px-4 py-2.5 rounded-xl text-sm text-ink/70 hover:bg-[#CE8280]/10 transition-colors"
+                active-class="bg-[#CE8280]/10 text-[#CE8280] font-bold"
+              >
+                👤 My Account / Dashboard
+              </RouterLink>
+            </li>
+            <li v-else>
+              <RouterLink
+                to="/login"
+                @click="mobileOpen = false"
+                class="block px-4 py-2.5 rounded-xl text-sm text-ink/70 hover:bg-[#CE8280]/10 transition-colors"
+                active-class="bg-[#CE8280]/10 text-[#CE8280] font-bold"
+              >
+                🔑 Sign In
+              </RouterLink>
+            </li>
+            
+            <!-- 🔥 ADDED: Admin Panel for mobile -->
             <li v-if="userStore.isAdmin">
               <RouterLink
                 to="/admin/products"
@@ -112,6 +136,16 @@
               >
                 ⚙️ Admin Panel
               </RouterLink>
+            </li>
+            
+            <!-- 🔥 ADDED: Logout button for mobile -->
+            <li v-if="userStore.isAuthenticated" class="pt-2 mt-1 border-t border-cream-100">
+              <button 
+                @click="handleLogout" 
+                class="w-full text-left block px-4 py-2.5 rounded-xl text-sm text-rose-600 hover:bg-rose-50 transition-colors font-medium"
+              >
+                🚪 Sign Out
+              </button>
             </li>
           </ul>
         </div>
@@ -224,7 +258,6 @@
             </div>
           </div>
 
-
           <div>
             <h3 class="font-serif text-sm font-bold text-white mb-4 tracking-widest uppercase">Shop</h3>
             <ul class="space-y-2 text-sm font-sans text-white/80">
@@ -234,7 +267,6 @@
             </ul>
           </div>
 
-  
           <div>
             <h3 class="font-serif text-sm font-bold text-white mb-4 tracking-widest uppercase">Studio</h3>
             <ul class="space-y-2 text-sm font-sans text-white/80">
@@ -257,10 +289,11 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/useUserStore'
 import { useCartStore } from '@/stores/useCartStore'
 
+const router = useRouter()
 const userStore = useUserStore()
 const cartStore = useCartStore()
 const scrolled  = ref(false)
@@ -277,6 +310,13 @@ const navLinks = [
 
 function onScroll() { 
   scrolled.value = window.scrollY > 20 
+}
+
+// 🔥 ADDED: Logout handler
+async function handleLogout() {
+  await userStore.logout()
+  mobileOpen.value = false
+  router.push('/')
 }
 
 onMounted(()  => window.addEventListener('scroll', onScroll))
