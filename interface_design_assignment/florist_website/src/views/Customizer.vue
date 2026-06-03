@@ -147,17 +147,19 @@
                     style="transform-origin: bottom center;"
                     @click.stop="removeFlower(i)"
                   >
-                    <!-- IMAGE mode -->
+                    <!-- 🔥 FIXED: IMAGE mode with bottom alignment -->
                     <template v-if="slot.flower.imageUrl">
                       <img
                         :src="slot.flower.imageUrl"
                         :alt="slot.flower.name"
                         class="flex-shrink-0 drop-shadow-md transition-transform duration-200 group-hover:scale-105"
                         :style="{
-                          width:          Math.round(flowerImgWidth(i)) + 'px',
-                          height:         Math.round(flowerImgHeight(i)) + 'px',
-                          objectFit:      'contain',
-                          objectPosition: 'top center',
+                          width: Math.round(flowerImgWidth(i)) + 'px',
+                          height: Math.round(flowerImgHeight(i)) + 'px',
+                          objectFit: 'contain',
+                          objectPosition: 'bottom center',
+                          position: 'relative',
+                          bottom: '0',
                         }"
                       />
                     </template>
@@ -167,16 +169,16 @@
                       <div
                         class="rounded-full flex-shrink-0"
                         :style="{
-                          width:      '3px',
-                          height:     stemHeight(i) + 'px',
+                          width: '3px',
+                          height: stemHeight(i) + 'px',
                           background: 'linear-gradient(to top, #4a7c50, #8fbc8f)',
                         }"
                       />
                       <div
                         class="flex items-center justify-center rounded-full shadow-md transition-transform duration-200 group-hover:scale-110 flex-shrink-0"
                         :style="{
-                          width:      flowerHeadSize(i) + 'px',
-                          height:     flowerHeadSize(i) + 'px',
+                          width: flowerHeadSize(i) + 'px',
+                          height: flowerHeadSize(i) + 'px',
                           background: slot.flower.bg || 'linear-gradient(135deg,#fde8e8,#f9d4d4)',
                         }"
                       >
@@ -190,11 +192,11 @@
                     <div
                       class="absolute opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-white/80 backdrop-blur-sm text-[#CE8280] border border-white/60 shadow-sm font-bold tracking-widest uppercase text-[8px] px-2 py-1 rounded-full whitespace-nowrap"
                       :style="{
-                        bottom:    (slot.flower.imageUrl
+                        bottom: (slot.flower.imageUrl
                           ? Math.round(flowerImgHeight(i))
                           : stemHeight(i) + flowerHeadSize(i)) + 8 + 'px',
-                        left:      '50%',
-                        zIndex:    200,
+                        left: '50%',
+                        zIndex: 200,
                         transform: `translateX(-50%) rotate(${-slotAngle(i)}deg)`,
                       }"
                     >
@@ -412,6 +414,10 @@ const canvasW   = 420
 const canvasH   = 520
 const SLOT_SIZE = 72
 
+// Flower image dimensions (adjust based on your actual image assets)
+const FLOWER_IMG_WIDTH = 70
+const FLOWER_IMG_HEIGHT = 140  // Stem touches bottom edge
+
 // ── Vase styles ───────────────────────────────────────────────────────────
 const vaseStyles = [
   {
@@ -486,17 +492,17 @@ function slotStyle(i) {
   const [xPct, rawYPct, angle = 0] = currentVase.value.slotPositions[i] ?? [50, 50, 0]
   const rimPx = getRimPx()
 
-  const rawTopPx    = (rawYPct / 100) * canvasH - SLOT_SIZE / 2
-  const maxTopPx    = rimPx - SLOT_SIZE
-  const topPx       = Math.min(rawTopPx, maxTopPx)
-
+  // Position container so its BOTTOM aligns with the vase rim
+  const bottomY = rimPx + 5
+  const topPx = bottomY - SLOT_SIZE
+  
   return {
-    left:            `${(xPct / 100) * canvasW - SLOT_SIZE / 2}px`,
-    top:             `${topPx}px`,
-    width:           SLOT_SIZE + 'px',
-    height:          SLOT_SIZE + 'px',
-    zIndex:          10 + i,
-    transform:       `rotate(${angle}deg)`,
+    left: `${(xPct / 100) * canvasW - SLOT_SIZE / 2}px`,
+    top: `${topPx}px`,
+    width: `${SLOT_SIZE}px`,
+    height: `${SLOT_SIZE}px`,
+    zIndex: 10 + i,
+    transform: `rotate(${angle}deg)`,
     transformOrigin: 'bottom center',
   }
 }
@@ -520,11 +526,11 @@ function flowerHeadSize(i) {
 }
 
 function flowerImgHeight(i) {
-  return 135 
+  return FLOWER_IMG_HEIGHT
 }
 
 function flowerImgWidth(i) {
-  return 65
+  return FLOWER_IMG_WIDTH
 }
 
 function slotAngle(i) {
