@@ -2,7 +2,6 @@
   <div class="process-page">
     <div class="bg-mesh" aria-hidden="true"/>
 
-    <!-- ── Hero ─────────────────────────────────────────────────────────────── -->
     <section class="hero">
       <div class="hero-inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="hero-text">
@@ -23,15 +22,15 @@
       </div>
     </section>
 
-    <!-- ── Timeline ──────────────────────────────────────────────────────────── -->
     <section class="timeline-section max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
-      <!-- Vertical centre rule — desktop only -->
       <div class="centre-rule" aria-hidden="true"/>
 
-      <!-- Step 1 — RIGHT -->
-      <div class="step">
-        <div class="step-spacer"/>
+      <div class="step reveal-step">
+        <div class="step-spacer relative overflow-hidden rounded-3xl shadow-sm h-64 sm:h-auto sm:self-stretch">
+          <img src="/images/flower_farm.png" 
+               class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 hover:scale-105" alt="Flower Farm">
+        </div>
         <div class="step-node">
           <div class="node-dot" style="background:linear-gradient(135deg,#9DB6A0,#7A9E7E)">01</div>
         </div>
@@ -46,9 +45,11 @@
         </div>
       </div>
 
-      <!-- Step 2 — LEFT (HTML 结构与 Step 1 保持一致，靠 CSS 反转) -->
-      <div class="step step-flip">
-        <div class="step-spacer"/>
+      <div class="step step-flip reveal-step">
+        <div class="step-spacer relative overflow-hidden rounded-3xl shadow-sm h-64 sm:h-auto sm:self-stretch">
+          <img src="/images/c_lab.png" 
+               class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 hover:scale-105" alt="Conditioning Lab">
+        </div>
         <div class="step-node">
           <div class="node-dot" style="background:linear-gradient(135deg,#CE8280,#B87472)">02</div>
         </div>
@@ -63,9 +64,11 @@
         </div>
       </div>
 
-      <!-- Step 3 — RIGHT -->
-      <div class="step">
-        <div class="step-spacer"/>
+      <div class="step reveal-step">
+        <div class="step-spacer relative overflow-hidden rounded-3xl shadow-sm h-64 sm:h-auto sm:self-stretch">
+          <img src="/images/artisan_design.png" 
+               class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 hover:scale-105" alt="Artisan Design">
+        </div>
         <div class="step-node">
           <div class="node-dot" style="background:linear-gradient(135deg,#D4C2FC,#B8A4F0)">03</div>
         </div>
@@ -80,9 +83,11 @@
         </div>
       </div>
 
-      <!-- Step 4 — LEFT (HTML 结构与 Step 1 保持一致，靠 CSS 反转) -->
-      <div class="step step-flip">
-        <div class="step-spacer"/>
+      <div class="step step-flip reveal-step">
+        <div class="step-spacer relative overflow-hidden rounded-3xl shadow-sm h-64 sm:h-auto sm:self-stretch">
+          <img src="/images/same_day_dispatch.png" 
+               class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 hover:scale-105" alt="Same-Day Dispatch">
+        </div>
         <div class="step-node">
           <div class="node-dot" style="background:linear-gradient(135deg,#F5C78E,#E8A857)">04</div>
         </div>
@@ -99,7 +104,6 @@
 
     </section>
 
-    <!-- ── Promise banner (已修改为明亮主题) ────────────────────────────────── -->
     <section class="promise-section max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
       <div class="promise-inner">
         <div class="promise-item">
@@ -120,6 +124,27 @@
     </section>
   </div>
 </template>
+
+<script setup>
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  // 创建交叉观察器
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      // 当组件进入视口（露出15%以上）时触发
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible')
+      }
+    })
+  }, { 
+    threshold: 0.15 // 灵敏度设定：露出15%就开始播放动画
+  })
+
+  // 抓取并观察所有的步骤条目
+  document.querySelectorAll('.reveal-step').forEach(el => observer.observe(el))
+})
+</script>
 
 <style scoped>
 /* ── Page shell ─────────────────────────────────────────── */
@@ -205,6 +230,23 @@
   padding: 2rem 0;
 }
 
+/* 🔥 新增：核心“蹦出来”动画 CSS 特效控制 */
+.reveal-step {
+  opacity: 0;
+  /* 初始状态：向下偏移 50px，并且轻微缩小，处于潜伏状态 */
+  transform: translateY(50px) scale(0.96); 
+  /* 核心：使用了弹簧缓动贝塞尔曲线 cubic-bezier(0.34, 1.56, 0.64, 1) */
+  /* 这会让组件在到达目标位置时，产生一个极其微妙、舒适的高级“果冻回弹”感，也就是你说的蹦出来！ */
+  transition: opacity 0.85s cubic-bezier(0.34, 1.56, 0.64, 1),
+              transform 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 激活状态：当滚动条滚到对应位置，JS 会加上 visible 类名 */
+.reveal-step.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1); /* 完美归位 */
+}
+
 /* Mobile: all steps full-width, number left */
 @media (max-width: 767px) {
   .step, .step.step-flip {
@@ -213,7 +255,13 @@
     gap: 1rem;
     padding: 1.5rem 0;
   }
-  .step-spacer { display: none; }
+  
+  .step-spacer { 
+    display: block; 
+    width: 100%; 
+    order: 0; 
+  }
+  
   .step-node {
     order: -1;
     width: auto; flex: none;
@@ -231,7 +279,6 @@
 
   .step-spacer {
     flex: 1;
-    /* empty — pushes card to correct half */
   }
 
   .step-node {
@@ -246,7 +293,6 @@
 
   .step-card {
     flex: 1;
-    /* card occupies one half */
     max-width: calc(50% - 2rem);
   }
 }
@@ -310,7 +356,7 @@
 /* ── Promise banner ─────────────────────────────────────── */
 .promise-section { position: relative; z-index: 1; }
 .promise-inner {
-  background: rgba(255, 255, 255, 0.85); /* 明亮的白底磨砂效果 */
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.95);
   border-radius: 2rem;
@@ -320,7 +366,7 @@
   justify-content: space-around;
   flex-wrap: wrap;
   gap: 1.5rem;
-  box-shadow: 0 8px 32px rgba(157, 182, 160, 0.12); /* 柔和的阴影 */
+  box-shadow: 0 8px 32px rgba(157, 182, 160, 0.12);
 }
 .promise-item { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; text-align: center; }
 .pnum {
@@ -333,6 +379,7 @@
   color: rgba(26, 26, 46, 0.65); 
   text-transform: uppercase; letter-spacing: 0.1em;
 }
+.pnum em { font-style: italic; color: #CE8280; }
 .pdivider {
   width: 1px; height: 3.5rem;
   background: rgba(26, 26, 46, 0.1);
