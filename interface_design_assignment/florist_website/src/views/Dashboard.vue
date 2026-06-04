@@ -123,6 +123,9 @@ const saving = ref(false)
 const toast = ref({ show: false, message: '', type: 'success' })
 const userOrders = ref([])
 
+// User average rating from reviews
+const userAvgRating = ref(0)
+
 const MY_STATES = [
   'Johor','Kedah','Kelantan','Melaka','Negeri Sembilan',
   'Pahang','Perak','Perlis','Pulau Pinang','Sabah',
@@ -134,7 +137,22 @@ const profileForm = reactive({
   name: '', phone: '', address: '', city: '', postcode: '', state: ''
 })
 
-// 🔥 Calculate real stats based on database orders
+// Fetch user's average rating from reviews
+const fetchUserRating = async () => {
+  if (!userStore.user?.id) return
+  try {
+    const res = await fetch(`/api/reviews?userId=${userStore.user.id}`)
+    const json = await res.json()
+    
+    if (json.success && json.avgRating) {
+      userAvgRating.value = json.avgRating
+    }
+  } catch (error) {
+    console.error('[FETCH_USER_RATING_ERROR]', error)
+  }
+}
+
+// Calculate real stats based on database orders
 const dynamicStats = computed(() => {
   const orders = userOrders.value
   const totalSpend = orders.reduce((sum, o) => sum + parseFloat(o.total || 0), 0)
@@ -144,10 +162,13 @@ const dynamicStats = computed(() => {
     return sum + (o.items ? o.items.reduce((s, item) => s + (item.qty || 1), 0) : 0)
   }, 0)
 
+  // Dynamic rating display based on user's actual review score
+  const ratingDisplay = userAvgRating.value > 0 ? userAvgRating.value.toFixed(1) + ' ★' : 'No ratings'
+
   return [
     { icon: '📦', value: orders.length.toString(), label: 'Total Orders' },
     { icon: '🌸', value: totalItems.toString(), label: 'Bouquets Bought' },
-    { icon: '⭐', value: '5.0', label: 'Top Customer' },
+    { icon: '⭐', value: ratingDisplay, label: 'Customer Rating' },
     { icon: '💰', value: `RM ${totalSpend.toFixed(2)}`, label: 'Total Spend' },
   ]
 })
@@ -181,6 +202,9 @@ async function fetchProfile() {
       const { data } = await orderRes.json()
       userOrders.value = data || []
     }
+
+    // 3. Fetch user's average rating from reviews
+    await fetchUserRating()
 
   } catch (err) {
     console.error('[DASHBOARD_SYNC_ERROR]', err)
