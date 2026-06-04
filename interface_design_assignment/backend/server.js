@@ -283,13 +283,17 @@ app.get('/api/users', async (req, res) => {
     const { data: profiles, error: profErr } = await supabase.from('profiles').select('*')
     if (profErr) throw profErr
 
+    // 🔥 FIX: Only count DELIVERED orders for total spend calculation
+    // This ensures VIP status is based on actual completed purchases
     const { data: orders, error: ordErr } = await supabase
       .from('orders')
-      .select('user_id, total')
-      .neq('status', 'cancelled')
+      .select('user_id, total, status')
+      .eq('status', 'delivered')  // Only delivered orders count toward total spend
+    
     if (ordErr) throw ordErr
 
     const usersAnalytics = profiles.map(profile => {
+      // Filter orders for this user (already filtered to delivered only)
       const userOrders = orders.filter(o => o.user_id === profile.id)
       const totalSpend = userOrders.reduce((sum, o) => sum + parseFloat(o.total || 0), 0)
       const orderCount = userOrders.length
@@ -453,7 +457,6 @@ app.get('/api/products', async (req, res) => {
 
 app.get('/api/products/:id', async (req, res) => {
   try {
-    // 🔥 FIX: Convert ID to integer for proper matching
     const productId = parseInt(req.params.id)
     if (isNaN(productId)) {
       return res.status(400).json({ success: false, error: 'Invalid product ID format' })
@@ -506,7 +509,6 @@ app.post('/api/products', async (req, res) => {
 
 app.patch('/api/products/:id', async (req, res) => {
   try {
-    // 🔥 FIX: Convert ID to integer for proper matching
     const productId = parseInt(req.params.id)
     if (isNaN(productId)) {
       return res.status(400).json({ success: false, error: 'Invalid product ID format' })
@@ -554,7 +556,6 @@ app.patch('/api/products/:id', async (req, res) => {
 
 app.delete('/api/products/:id', async (req, res) => {
   try {
-    // 🔥 FIX: Convert ID to integer for proper matching
     const productId = parseInt(req.params.id)
     if (isNaN(productId)) {
       return res.status(400).json({ success: false, error: 'Invalid product ID format' })
@@ -606,7 +607,6 @@ app.post('/api/flowers', async (req, res) => {
 
 app.patch('/api/flowers/:id', async (req, res) => {
   try {
-    // Convert ID to integer
     const flowerId = parseInt(req.params.id)
     if (isNaN(flowerId)) {
       return res.status(400).json({ success: false, error: 'Invalid flower ID format' })
@@ -629,7 +629,6 @@ app.patch('/api/flowers/:id', async (req, res) => {
 
 app.delete('/api/flowers/:id', async (req, res) => {
   try {
-    // Convert ID to integer
     const flowerId = parseInt(req.params.id)
     if (isNaN(flowerId)) {
       return res.status(400).json({ success: false, error: 'Invalid flower ID format' })
@@ -658,7 +657,6 @@ app.get('/api/orders', async (req, res) => {
 
 app.get('/api/orders/:id', async (req, res) => {
   try {
-    // Convert ID to integer
     const orderId = parseInt(req.params.id)
     if (isNaN(orderId)) {
       return res.status(400).json({ success: false, error: 'Invalid order ID format' })
@@ -720,7 +718,6 @@ app.patch('/api/orders/:id/status', async (req, res) => {
     return res.status(400).json({ success: false, error: `Status must be one of: ${valid.join(', ')}` })
   }
   try {
-    // Convert ID to integer
     const orderId = parseInt(req.params.id)
     if (isNaN(orderId)) {
       return res.status(400).json({ success: false, error: 'Invalid order ID format' })
@@ -750,17 +747,15 @@ app.patch('/api/orders/:id/status', async (req, res) => {
 })
 
 // ═══════════════════════════════════════════════════════════════════════════
-// REVIEWS (🔥 UPGRADED: Smart Verification with Order ID Binding)
+// REVIEWS
 // ═══════════════════════════════════════════════════════════════════════════
 
-// GET reviews - supports filtering by product, user, reported status
 app.get('/api/reviews', async (req, res) => {
   try {
     const { productId, userId, reported } = req.query
     let q = supabase.from('reviews').select('*').order('created_at', { ascending: false })
 
     if (productId) {
-      // Convert productId to integer
       const pid = parseInt(productId)
       if (!isNaN(pid)) q = q.eq('product_id', pid)
     }
@@ -788,9 +783,7 @@ app.get('/api/reviews', async (req, res) => {
   }
 })
 
-// 🔥 UPGRADED POST review - Smart verification with orderId binding
 app.post('/api/reviews', async (req, res) => {
-  // Accept orderId from request body
   const { productId, orderId, userId, userName, rating, comment } = req.body
 
   if (!productId || !userId || !comment?.trim()) {
@@ -800,10 +793,8 @@ app.post('/api/reviews', async (req, res) => {
   try {
     let isVerified = false
     
-    // If rating is provided (coming from order history with star rating)
     if (rating && rating > 0) {
       if (orderId) {
-        // Strictly verify that this order belongs to the user and is delivered
         const ordId = parseInt(orderId)
         const { data: ord } = await supabase
           .from('orders')
@@ -823,7 +814,6 @@ app.post('/api/reviews', async (req, res) => {
         })
       }
     } else {
-      // Just a text comment (rating is null), check if they ever bought this product
       const { data: deliveredOrders } = await supabase
         .from('orders')
         .select('items')
@@ -839,7 +829,7 @@ app.post('/api/reviews', async (req, res) => {
 
     const { data, error } = await supabase.from('reviews').insert({
       product_id: parseInt(productId),
-      order_id: orderId ? parseInt(orderId) : null, // Bind the specific order ID
+      order_id: orderId ? parseInt(orderId) : null,
       user_id: userId,
       user_name: userName || 'Anonymous',
       rating: (isVerified && rating) ? parseInt(rating) : null,
@@ -852,7 +842,6 @@ app.post('/api/reviews', async (req, res) => {
     }).select().single()
 
     if (error) {
-      // Prevent duplicate review for the same order and product
       if (error.code === '23505') {
         return res.status(409).json({ 
           success: false, 
@@ -876,7 +865,6 @@ app.post('/api/reviews/:id/like', async (req, res) => {
   }
 
   try {
-    // Convert review ID to integer
     const reviewId = parseInt(req.params.id)
     if (isNaN(reviewId)) {
       return res.status(400).json({ success: false, error: 'Invalid review ID format' })
@@ -917,7 +905,6 @@ app.post('/api/reviews/:id/like', async (req, res) => {
 
 app.patch('/api/reviews/:id', async (req, res) => {
   try {
-    // Convert review ID to integer
     const reviewId = parseInt(req.params.id)
     if (isNaN(reviewId)) {
       return res.status(400).json({ success: false, error: 'Invalid review ID format' })
@@ -955,7 +942,6 @@ app.post('/api/reviews/:id/report', async (req, res) => {
   }
 
   try {
-    // Convert review ID to integer
     const reviewId = parseInt(req.params.id)
     if (isNaN(reviewId)) {
       return res.status(400).json({ success: false, error: 'Invalid review ID format' })
@@ -978,7 +964,6 @@ app.post('/api/reviews/:id/report', async (req, res) => {
 
 app.delete('/api/reviews/:id', async (req, res) => {
   try {
-    // Convert review ID to integer
     const reviewId = parseInt(req.params.id)
     if (isNaN(reviewId)) {
       return res.status(400).json({ success: false, error: 'Invalid review ID format' })
