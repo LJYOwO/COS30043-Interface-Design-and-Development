@@ -1,45 +1,33 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-5">
 
-    <!-- ── Header ────────────────────────────────────────────────────────── -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div>
-        <h2 class="font-serif text-2xl text-ink font-bold">Orders</h2>
-        <p class="text-sm text-ink/50 mt-0.5">Manage customer orders and update delivery status.</p>
-      </div>
-      <button
-        class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-cream-200 text-sm text-ink/60 hover:bg-cream-200 transition-colors"
-        @click="fetchOrders"
-      >
-        🔄 Refresh
-      </button>
-    </div>
-
-    <!-- ── Stats Cards (includes Delivered count) ────────────────────────── -->
+    <!-- Stats Dashboard -->
     <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
       <div v-for="s in orderStats" :key="s.label"
-           class="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-cream-200">
-        <p class="text-xs text-ink/50 mb-1">{{ s.label }}</p>
-        <p class="font-serif text-xl font-bold text-ink">{{ s.value }}</p>
+           class="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-cream-200 shadow-xs transition-all hover:bg-white/90">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-ink/40 mb-1">{{ s.label }}</p>
+        <p class="font-serif text-xl font-bold text-ink leading-none">{{ s.value }}</p>
       </div>
     </div>
 
-    <!-- ── Toolbar ────────────────────────────────────────────────────────── -->
-    <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-      <div class="flex items-center gap-3 flex-wrap">
-        <!-- Search -->
-        <div class="relative">
+    <!-- Unified Control Center Panel -->
+    <div class="bg-white/40 backdrop-blur-sm border border-cream-200/60 rounded-3xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+      
+      <!-- Left side: Search + Status filter -->
+      <div class="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <!-- Search bar -->
+        <div class="relative flex-1 min-w-[200px]">
           <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
           </svg>
-          <input v-model="search" type="text" placeholder="Search orders…"
-            class="pl-9 pr-4 py-2 text-sm bg-white/70 border border-cream-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#CE8280]/30 w-52"/>
+          <input v-model="search" type="text" placeholder="Search orders by id, customer name..."
+            class="pl-9 pr-4 py-2 text-sm bg-white border border-cream-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#CE8280]/30 w-full shadow-2xs"/>
         </div>
 
-        <!-- Status Filter with Delivered option -->
+        <!-- Status Filter Dropdown -->
         <select v-model="statusFilter"
-          class="text-xs bg-white/70 border border-cream-200 rounded-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#CE8280]/30 cursor-pointer">
-          <option value="">All Status</option>
+          class="text-xs bg-white border border-cream-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#CE8280]/30 cursor-pointer shadow-2xs font-bold text-ink/60">
+          <option value="">All Orders</option>
           <option value="processing">🟡 Processing</option>
           <option value="prepared">🔵 Prepared</option>
           <option value="dispatched">🟣 Dispatched</option>
@@ -47,22 +35,35 @@
           <option value="cancelled">❌ Cancelled</option>
         </select>
       </div>
-      <p class="text-xs text-ink/40">{{ filteredOrders.length }} orders</p>
+
+      <!-- Right side: Sync button -->
+      <button
+        class="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-full border border-cream-300 bg-white text-ink/60 text-xs font-bold uppercase tracking-wider hover:bg-cream-100 transition-all shadow-2xs h-9 flex-shrink-0"
+        @click="fetchOrders"
+      >
+        <span>🔄</span> Sync Orders
+      </button>
     </div>
 
-    <!-- ── Loading ────────────────────────────────────────────────────────── -->
+    <!-- Auxiliary status info bar -->
+    <div class="flex items-center justify-between px-1 text-xs text-ink/50">
+      <span class="font-semibold">✨ Found {{ filteredOrders.length }} orders matching filter criteria</span>
+      <span class="text-[10px] font-bold uppercase tracking-widest text-ink/30 hidden sm:inline">Order Logistics Ledger</span>
+    </div>
+
+    <!-- Loading -->
     <div v-if="loading" class="space-y-3">
       <div v-for="n in 5" :key="n" class="h-24 rounded-3xl animate-pulse bg-cream-200"/>
     </div>
 
-    <!-- ── Error ─────────────────────────────────────────────────────────── -->
+    <!-- Error -->
     <div v-else-if="error" class="text-center py-12 rounded-3xl bg-white/60 border border-cream-200">
       <p class="text-4xl mb-2">⚠️</p>
       <p class="text-sm text-ink/50 mb-3">{{ error }}</p>
       <button class="text-xs text-sage underline" @click="fetchOrders">Retry</button>
     </div>
 
-    <!-- ── Orders list ────────────────────────────────────────────────────── -->
+    <!-- Orders list -->
     <div v-else class="space-y-4">
       <div
         v-for="order in filteredOrders"
@@ -99,7 +100,7 @@
               <p class="text-[10px] text-ink/40">{{ formatDate(order.createdAt) }}</p>
             </div>
 
-            <!-- Status update dropdown (disabled for Delivered and Cancelled) -->
+            <!-- Status update dropdown -->
             <div class="flex items-center gap-2">
               <select
                 :value="order.status"
@@ -191,7 +192,7 @@
       </div>
     </div>
 
-    <!-- ── Toast ──────────────────────────────────────────────────────────── -->
+    <!-- Toast -->
     <Transition name="toast">
       <div v-if="toast.show"
            class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-full text-sm font-medium text-white shadow-lg flex items-center gap-2 whitespace-nowrap"
@@ -205,7 +206,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
-// ── Constants ─────────────────────────────────────────────────────────────
+// Constants
 const TRACKING_STEPS = [
   { key: 'processing', label: 'Ordered'    },
   { key: 'prepared',   label: 'Prepared'   },
@@ -214,7 +215,7 @@ const TRACKING_STEPS = [
 ]
 const STEP_MAP = { processing: 0, prepared: 1, dispatched: 2, delivered: 3, cancelled: -1 }
 
-// ── State ─────────────────────────────────────────────────────────────────
+// State
 const orders      = ref([])
 const loading     = ref(false)
 const error       = ref('')
@@ -223,13 +224,13 @@ const statusFilter = ref('')
 const updatingId  = ref(null)
 const toast       = ref({ show: false, message: '', type: 'success' })
 
-// ── Toast ─────────────────────────────────────────────────────────────────
+// Toast
 function showToast(message, type = 'success') {
   toast.value = { show: true, message, type }
   setTimeout(() => { toast.value.show = false }, 3000)
 }
 
-// ── API ───────────────────────────────────────────────────────────────────
+// API
 async function apiFetch(url, options = {}) {
   const res  = await fetch(url, {
     headers: { 'Content-Type': 'application/json' },
@@ -240,13 +241,11 @@ async function apiFetch(url, options = {}) {
   return json
 }
 
-// 🔥 CORE FIX: Cache-Busting with timestamp and no-cache headers
+// Cache-busting with timestamp and no-cache headers
 async function fetchOrders() {
   loading.value = true
   error.value   = ''
   try {
-    // Add timestamp query parameter to force fresh request
-    // Also add cache-control headers to prevent browser caching
     const res = await fetch(`/api/orders?_t=${Date.now()}`, {
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -267,7 +266,7 @@ async function fetchOrders() {
 
 onMounted(fetchOrders)
 
-// ── Computed ──────────────────────────────────────────────────────────────
+// Computed
 const filteredOrders = computed(() =>
   orders.value.filter(o => {
     const matchSearch = !search.value ||
@@ -279,7 +278,7 @@ const filteredOrders = computed(() =>
   })
 )
 
-// 🔥 Updated stats cards with Delivered count
+// Stats cards with Delivered count
 const orderStats = computed(() => [
   { label: 'Total Orders',   value: orders.value.length },
   { label: 'Processing',     value: orders.value.filter(o => o.status === 'processing').length },
@@ -288,7 +287,7 @@ const orderStats = computed(() => [
   { label: '✅ Delivered',   value: orders.value.filter(o => o.status === 'delivered').length },
 ])
 
-// ── Update order status ───────────────────────────────────────────────────
+// Update order status
 async function updateStatus(order, newStatus) {
   if (order.status === newStatus) return
   updatingId.value = order.id
@@ -297,7 +296,6 @@ async function updateStatus(order, newStatus) {
       method: 'PATCH',
       body:   JSON.stringify({ status: newStatus }),
     })
-    // Update locally
     const idx = orders.value.findIndex(o => o.id === order.id)
     if (idx !== -1) orders.value[idx] = { ...orders.value[idx], ...json.data }
     showToast(`Order #${order.id} marked as "${statusLabel(newStatus)}"`)
@@ -308,33 +306,26 @@ async function updateStatus(order, newStatus) {
   }
 }
 
-// ── Tracking step helpers ─────────────────────────────────────────────────
+// Tracking step helpers
 function trackingStep(status) { return STEP_MAP[status] ?? 0 }
 
-// Step i is fully DONE (green) — current step index is PAST i
 function isStepDone(status, i) {
   const current = STEP_MAP[status] ?? 0
-  // For 'delivered' (step 3), all steps including 3 are done
   return status === 'delivered' ? true : current > i
 }
 
-// Step i is the CURRENT active step (blush/pink)
 function isStepActive(status, i) {
-  if (status === 'delivered') return false // all done, none "active"
+  if (status === 'delivered') return false
   return (STEP_MAP[status] ?? 0) === i
 }
 
-// Returns inline style object for the step circle
 function stepCircleStyle(status, i) {
   if (isStepDone(status, i)) {
-    // Completed — sage green
     return { background: '#9DB6A0', color: 'white', boxShadow: '0 1px 4px rgba(157,182,160,0.4)' }
   }
   if (isStepActive(status, i)) {
-    // Current — blush pink
     return { background: '#CE8280', color: 'white', boxShadow: '0 1px 6px rgba(206,130,128,0.45)' }
   }
-  // Pending — light grey
   return { background: '#F5EFE2', color: 'rgba(44,44,44,0.35)' }
 }
 

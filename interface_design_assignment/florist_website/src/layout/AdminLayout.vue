@@ -1,8 +1,11 @@
 <template>
   <div class="min-h-screen flex" style="background: #FDFBF7;">
+
+    <!-- ── Desktop Sidebar (hidden on mobile) ─────────────────────────────── -->
     <aside
       :class="[
-        'fixed top-0 left-0 h-full z-40 flex flex-col bg-[#CE8280] text-white transition-all duration-300 shadow-xl',
+        'fixed top-0 left-0 h-full z-40 flex-col bg-[#CE8280] text-white transition-all duration-300 shadow-xl',
+        'hidden md:flex',
         sidebarCollapsed ? 'w-16' : 'w-60'
       ]"
     >
@@ -60,32 +63,69 @@
       </div>
     </aside>
 
-    <div :class="['flex-1 flex flex-col min-w-0 transition-all duration-300', sidebarCollapsed ? 'ml-16' : 'ml-60']">
-      <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-cream-200 px-6 py-3 flex items-center justify-between gap-4 shadow-sm">
+    <!-- ── Main content area ──────────────────────────────────────────────── -->
+    <div 
+      class="flex-1 flex flex-col min-w-0 transition-all duration-300"
+      :class="sidebarCollapsed ? 'md:ml-16' : 'md:ml-60'"
+    >
+
+      <!-- ── Top Header ──────────────────────────────────────────────────── -->
+      <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-cream-200 px-4 md:px-6 py-3 flex items-center justify-between gap-4 shadow-sm">
         <div>
-          <h1 class="font-serif text-lg font-bold text-ink">{{ pageTitle }}</h1>
-          <p class="text-[10px] font-bold uppercase tracking-widest text-ink/40">{{ breadcrumb }}</p>
+          <h1 class="font-serif text-base md:text-lg font-bold text-ink">{{ pageTitle }}</h1>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-ink/40 hidden sm:block">{{ breadcrumb }}</p>
         </div>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
           <button class="relative p-2 rounded-full hover:bg-cream-100 transition-colors">
             <svg class="w-5 h-5 text-ink/50" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
             </svg>
             <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-[#CE8280] border-2 border-white rounded-full"></span>
           </button>
-          <RouterLink
+            <RouterLink
             to="/"
-            class="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider text-white bg-ink hover:bg-ink/80 transition-colors shadow-sm"
+            class="px-2.5 sm:px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider text-ink/60 bg-cream-100 hover:bg-cream-200/80 hover:text-ink/90 border border-cream-200/70 transition-all duration-200 flex items-center gap-1.5 shadow-2xs"
+            title="View Main Site"
           >
-            ← View Site
+            <span class="text-xs">🌐</span> <span class="hidden sm:inline">View Site</span>
           </RouterLink>
         </div>
       </header>
 
-      <main class="flex-1 p-6 overflow-y-auto">
+      <!-- ── Page Content ────────────────────────────────────────────────── -->
+      <!-- pb-24 on mobile leaves room above the bottom nav bar -->
+      <main class="flex-1 p-4 md:p-6 overflow-y-auto pb-24 md:pb-6">
         <RouterView />
       </main>
     </div>
+
+    <!-- ── Mobile Bottom Tab Bar (visible only on mobile) ─────────────────── -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-cream-200 shadow-[0_-4px_24px_rgba(0,0,0,0.07)]">
+      <ul class="flex items-stretch">
+        <li v-for="item in adminNav" :key="item.name" class="flex-1">
+          <RouterLink
+            :to="item.to"
+            :class="[
+              'flex flex-col items-center justify-center gap-0.5 py-2.5 w-full transition-colors',
+              $route.path === item.to
+                ? 'text-[#CE8280]'
+                : 'text-ink/40 active:text-[#CE8280]'
+            ]"
+          >
+            <!-- Active indicator dot -->
+            <span
+              :class="[
+                'w-1 h-1 rounded-full mb-0.5 transition-all duration-200',
+                $route.path === item.to ? 'bg-[#CE8280] scale-100' : 'bg-transparent scale-0'
+              ]"
+            ></span>
+            <span class="text-xl leading-none">{{ item.icon }}</span>
+            <span class="text-[9px] font-bold uppercase tracking-wider leading-none mt-0.5">{{ item.name }}</span>
+          </RouterLink>
+        </li>
+      </ul>
+    </nav>
+
   </div>
 </template>
 
@@ -105,7 +145,7 @@ const adminNav = [
   { name: 'Products',    to: '/admin/products',   icon: '🛍️' },
   { name: 'Orders',      to: '/admin/orders',     icon: '📦' },
   { name: 'Reviews',     to: '/admin/reviews',    icon: '★'  },
-  { name: 'Users',       to: '/admin/users',      icon: '👥' }, // 🔥 加入 Users 面板
+  { name: 'Users',       to: '/admin/users',      icon: '👥' },
 ]
 
 const pageTitle = computed(() => {

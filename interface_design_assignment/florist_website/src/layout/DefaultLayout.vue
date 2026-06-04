@@ -3,15 +3,15 @@
     <div class="fixed inset-0 bg-petal-mesh opacity-60 pointer-events-none" aria-hidden="true" />
 
     <!-- ── Header ───────────────────────────────────────────────────────────── -->
-    <header
-      :class="[
-        'fixed top-0 inset-x-0 z-50 transition-all duration-500',
-        scrolled
-          ? 'bg-white/70 backdrop-blur-md shadow-glass border-b border-cream-200'
-          : 'bg-transparent'
-      ]"
-    >
-      <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+    <header class="fixed top-0 inset-x-0 z-50 transition-all duration-500 pt-3 px-3 sm:px-5">
+      <nav
+        :class="[
+          'max-w-7xl mx-auto h-14 flex items-center justify-between gap-4 rounded-2xl px-4 sm:px-6 transition-all duration-500',
+          scrolled
+            ? 'bg-white/85 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.07)] border border-cream-200'
+            : 'bg-white/20 backdrop-blur-md border border-white/40'
+        ]"
+      >
         <RouterLink to="/" class="flex items-center gap-2 group" aria-label="FloraLab Home">
           <span class="text-2xl select-none">✿</span>
           <span class="font-serif text-xl font-semibold text-[#CE8280] tracking-wide group-hover:text-[#B87472] transition-colors">
@@ -90,9 +90,9 @@
         </div>
       </nav>
 
-      <!-- 🔥 UPGRADED: Mobile dropdown menu with Dashboard & Logout -->
+      <!-- Mobile dropdown -->
       <Transition name="slide-down">
-        <div v-if="mobileOpen" class="md:hidden bg-white/95 backdrop-blur-md border-t border-cream-100 px-4 pb-4">
+        <div v-if="mobileOpen" class="md:hidden mx-3 mt-1 bg-white/95 backdrop-blur-xl border border-cream-200 rounded-2xl shadow-lg px-3 pb-3">
           <ul class="flex flex-col gap-1 pt-2">
             <li v-for="link in navLinks" :key="link.name">
               <RouterLink
@@ -232,7 +232,7 @@
     </Teleport>
 
     <!-- ── Main content ─────────────────────────────────────────────────────── -->
-    <main class="flex-1 pt-16">
+    <main class="flex-1 pt-20">
       <RouterView />
     </main>
 

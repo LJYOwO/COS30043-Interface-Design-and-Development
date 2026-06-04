@@ -1,57 +1,82 @@
 <template>
-  <div class="space-y-6">
-    <!-- ── Page Header ───────────────────────────────────────────────────── -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div>
-        <h2 class="font-serif text-2xl text-ink font-bold">Product Catalogue</h2>
-        <p class="text-sm text-ink/50 mt-0.5">Manage bouquets, pricing, media, and availability.</p>
-      </div>
-      <button
-        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#CE8280] text-white text-sm font-medium hover:bg-[#B87472] transition-all shadow-petal"
-        @click="openModal(null)"
-      >
-        + Add Product
-      </button>
-    </div>
-
-    <!-- ── Stats ─────────────────────────────────────────────────────────── -->
+  <div class="space-y-5">
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <div v-for="s in stats" :key="s.label" class="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-cream-200">
-        <p class="text-xs text-ink/50 mb-1">{{ s.label }}</p>
-        <p class="font-serif text-xl font-bold text-ink">{{ s.value }}</p>
+      <div v-for="s in stats" :key="s.label"
+           class="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-cream-200 shadow-xs transition-all hover:bg-white/90">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-ink/40 mb-1">{{ s.label }}</p>
+        <p class="font-serif text-xl font-bold text-ink leading-none">{{ s.value }}</p>
       </div>
     </div>
 
-    <!-- ── Toolbar ────────────────────────────────────────────────────────── -->
-    <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-      <div class="flex items-center gap-3 flex-wrap">
-        <div class="relative">
+    <div class="bg-white/40 backdrop-blur-sm border border-cream-200/60 rounded-3xl p-3.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3 shadow-xs">
+      
+      <div class="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <div class="relative flex-1 min-w-[200px]">
           <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
           </svg>
           <input v-model="search" type="text" placeholder="Search products…"
-            class="pl-9 pr-4 py-2 text-sm bg-white/70 border border-cream-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#CE8280]/30 w-52" />
+            class="pl-9 pr-4 py-2 text-sm bg-white border border-cream-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#CE8280]/30 w-full shadow-2xs" />
         </div>
-        <select v-model="filterCategory" class="text-xs bg-white/70 border border-cream-200 rounded-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#CE8280]/30 cursor-pointer">
+
+        <select v-model="filterCategory" 
+          class="text-xs bg-white border border-cream-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#CE8280]/30 cursor-pointer shadow-2xs font-bold text-ink/60">
           <option value="">All Categories</option>
           <option v-for="cat in CATEGORIES" :key="cat" :value="cat">{{ cat }}</option>
         </select>
-        <select v-model="filterStatus" class="text-xs bg-white/70 border border-cream-200 rounded-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#CE8280]/30 cursor-pointer">
+
+        <select v-model="filterStatus" 
+          class="text-xs bg-white border border-cream-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#CE8280]/30 cursor-pointer shadow-2xs font-bold text-ink/60">
           <option value="">All Status</option>
           <option value="active">Active</option>
           <option value="draft">Draft</option>
           <option value="archived">Archived</option>
         </select>
       </div>
-      <div class="flex items-center gap-2">
-        <button v-for="v in ['grid','list']" :key="v" class="p-2 rounded-lg transition-colors" :class="viewMode === v ? 'bg-ink text-cream' : 'bg-cream-200 text-ink/50 hover:bg-cream-300'" @click="viewMode = v">
-          <svg v-if="v === 'grid'" class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
-          <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+
+      <div class="flex items-center justify-between lg:justify-end gap-3 border-t lg:border-t-0 pt-2 lg:pt-0 border-cream-100 flex-shrink-0">
+<div class="relative bg-cream-100/80 rounded-xl p-1 flex items-center border border-cream-200/80 h-9 select-none overflow-hidden">
+          
+          <div
+            class="absolute top-1 bottom-1 rounded-lg bg-[#CE8280] shadow-2xs transition-all duration-300 cubic-bezier(0.34, 1.56, 0.64, 1)"
+            :class="viewMode === 'grid' ? 'left-1 w-8' : 'left-9 w-8'"
+          ></div>
+
+          <button
+            class="relative z-10 w-8 h-7 flex items-center justify-center rounded-lg transition-colors duration-300"
+            :class="viewMode === 'grid' ? 'text-white' : 'text-ink/40 hover:text-ink/70'"
+            @click="viewMode = 'grid'"
+            title="Grid View"
+          >
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+          </button>
+
+          <button
+            class="relative z-10 w-8 h-7 flex items-center justify-center rounded-lg transition-colors duration-300"
+            :class="viewMode === 'list' ? 'text-white' : 'text-ink/40 hover:text-ink/70'"
+            @click="viewMode = 'list'"
+            title="List View"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+          </button>
+        </div>
+
+        <button
+          class="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-full bg-[#CE8280] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#B87472] transition-all shadow-petal h-9 flex-shrink-0"
+          @click="openModal(null)"
+        >
+          <span>＋</span> Add Product
         </button>
       </div>
     </div>
 
-    <!-- ── Grid View ──────────────────────────────────────────────────────── -->
+    <div class="flex items-center justify-between px-1 text-xs text-ink/50">
+      <span class="font-semibold">✨ Total of {{ filteredProducts.length }} products found</span>
+      <span class="text-[10px] font-bold uppercase tracking-widest text-ink/30 hidden sm:inline">Product Catalogue System</span>
+    </div>
+
+    <!-- ── Rest of the template remains the same (Grid View, List View, Modal, etc.) ── -->
+    <!-- Grid View -->
     <div v-if="viewMode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
       <div
         v-for="product in filteredProducts"
@@ -97,7 +122,7 @@
       </div>
     </div>
 
-    <!-- ── List / Table View ──────────────────────────────────────────────── -->
+    <!-- List / Table View -->
     <div v-else class="bg-white/60 backdrop-blur-sm rounded-3xl border border-cream-200 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
@@ -146,14 +171,14 @@
                   <button class="p-1.5 rounded-lg hover:bg-red-50 text-ink/50 hover:text-red-400 transition-colors" @click="confirmDelete(product)" title="Delete">🗑️</button>
                 </div>
               </td>
-            </tr>
+             </tr>
             <tr v-if="filteredProducts.length === 0">
               <td colspan="8" class="text-center py-12 text-ink/40 text-sm">
                 <span class="text-3xl block mb-2">🌾</span> No products match your filters.
-              </td>
-            </tr>
+               </td>
+             </tr>
           </tbody>
-        </table>
+         </table>
       </div>
       <div class="flex items-center justify-between px-5 py-3 border-t border-cream-100 text-xs text-ink/50 flex-wrap gap-3">
         <div class="flex items-center gap-3">
@@ -176,10 +201,10 @@
          ADD / EDIT PRODUCT MODAL (Full Schema)
     ═══════════════════════════════════════════════════════════════════════ -->
     <Transition name="modal">
-      <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div v-if="showModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
         <div class="absolute inset-0 bg-[#1a1a1a]/40 backdrop-blur-sm" @click="closeModal"></div>
 
-        <div class="relative bg-white rounded-3xl border border-cream-100 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 animate-fadeIn">
+        <div class="relative bg-white rounded-t-3xl sm:rounded-3xl border border-cream-100 shadow-2xl max-w-4xl w-full max-h-[85vh] sm:max-h-[90vh] overflow-y-auto p-5 sm:p-6 animate-fadeIn">
           <div class="flex justify-between items-start mb-6 border-b border-cream-200 pb-4">
             <div>
               <h3 class="font-serif text-xl font-bold text-ink">{{ editingProduct ? 'Edit Botanical Masterpiece' : 'Introduce New Creation' }}</h3>
@@ -277,7 +302,6 @@
                   </div>
                 </div>
                 
-                <!-- 🔥 UPGRADED: Colors with dot badge design and 10 color options -->
                 <div>
                   <span class="text-[10px] uppercase text-ink/50 mb-2 block font-bold">Colors</span>
                   <div class="flex flex-wrap gap-2">
@@ -433,7 +457,7 @@
       </div>
     </Transition>
 
-    <!-- ── Delete Confirm ─────────────────────────────────────────────────── -->
+    <!-- Delete Confirm -->
     <Transition name="fade">
       <div v-if="showDeleteConfirm" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-[#1a1a1a]/40 backdrop-blur-sm" @click="showDeleteConfirm = false" />
@@ -451,7 +475,7 @@
 
     <!-- Toast Notification -->
     <Transition name="fade">
-      <div v-if="toast.show" class="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium" :class="toast.type === 'success' ? 'bg-[#9DB6A0] text-white' : 'bg-rose-500 text-white'">
+      <div v-if="toast.show" class="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium" :class="toast.type === 'success' ? 'bg-[#9DB6A0] text-white' : 'bg-rose-500 text-white'">
         {{ toast.message }}
       </div>
     </Transition>
@@ -474,7 +498,6 @@ const BG_PRESETS = [
   { label: 'Ink', value: 'linear-gradient(135deg,#2c2c2c,#4a4a4a)' },
 ]
 
-// 🔥 NEW: Color picker configuration with Hex codes for dot badge design
 const PRODUCT_COLORS = [
   { name: 'Pink', hex: '#F9D4D4' },
   { name: 'White', hex: '#FDFBF7' },
@@ -509,11 +532,10 @@ const totalUploadCount = ref(0)
 const toast = ref({ show: false, message: '', type: 'success' })
 const newTagInput = ref('')
 
-// Refs for hidden file inputs
 const primaryInputRef = ref(null)
 const galleryInputRef = ref(null)
 
-// Form data (matches Supabase schema)
+// Form data
 const form = reactive({
   name: '',
   category: '',
@@ -545,27 +567,20 @@ const form = reactive({
   sortOrder: 0
 })
 
-// ── Toggle array item helper ──────────────────────────────────────────────
+// ── Helper functions ─────────────────────────────────────────────────────
 const toggleArrayItem = (arrayName, item) => {
   if (!form[arrayName]) form[arrayName] = []
   const index = form[arrayName].indexOf(item)
-  if (index === -1) {
-    form[arrayName].push(item)
-  } else {
-    form[arrayName].splice(index, 1)
-  }
+  if (index === -1) form[arrayName].push(item)
+  else form[arrayName].splice(index, 1)
 }
 
-// ── Add custom tag helper ─────────────────────────────────────────────────
 const addCustomTag = () => {
   const tag = newTagInput.value.trim().toLowerCase()
-  if (tag && !form.tags.includes(tag)) {
-    form.tags.push(tag)
-  }
+  if (tag && !form.tags.includes(tag)) form.tags.push(tag)
   newTagInput.value = ''
 }
 
-// Computed
 const stats = computed(() => [
   { label: 'Total Products', value: products.value.length },
   { label: 'Active', value: products.value.filter(p => (p.status || 'active') === 'active').length },
@@ -583,13 +598,11 @@ const filteredProducts = computed(() => {
   })
 })
 
-// Toast helper
 function showToast(message, type = 'success') {
   toast.value = { show: true, message, type }
   setTimeout(() => { toast.value.show = false }, 3000)
 }
 
-// API helpers
 async function apiFetch(url, options = {}) {
   const res = await fetch(url, {
     headers: { 'Content-Type': 'application/json' },
@@ -600,7 +613,6 @@ async function apiFetch(url, options = {}) {
   return json
 }
 
-// Fetch products
 async function fetchProducts() {
   loading.value = true
   error.value = ''
@@ -617,7 +629,6 @@ async function fetchProducts() {
 
 onMounted(fetchProducts)
 
-// Proxy trigger functions
 function triggerPrimaryUpload() {
   if (primaryInputRef.value) primaryInputRef.value.click()
 }
@@ -626,71 +637,51 @@ function triggerGalleryUpload() {
   if (galleryInputRef.value) galleryInputRef.value.click()
 }
 
-// Modal helpers
 function openModal(product) {
   imagePreview.value = null
   editingProduct.value = product
   
   if (product) {
-    form.name = product.name || ''
-    form.category = product.category || ''
-    form.price = product.price || null
-    form.stock = product.stock ?? 0
-    form.status = product.status || 'active'
-    form.desc = product.desc || ''
-    form.fullDesc = product.fullDesc || ''
-    form.imageUrl = product.imageUrl || ''
-    form.videoUrl = product.videoUrl || ''
-    form.gallery = Array.isArray(product.gallery) ? [...product.gallery] : []
-    form.emoji = product.emoji || '🌸'
-    form.bg = product.bg || BG_PRESETS[0].value
-    form.isBestseller = product.isBestseller || false
-    form.isNew = product.isNew || false
-    form.isFeatured = product.isFeatured || false
-    form.tags = Array.isArray(product.tags) ? [...product.tags] : []
-    form.occasions = Array.isArray(product.occasions) ? [...product.occasions] : []
-    form.seasons = Array.isArray(product.seasons) ? [...product.seasons] : []
-    form.colors = Array.isArray(product.colors) ? [...product.colors] : []
-    form.sizes = Array.isArray(product.sizes) ? JSON.parse(JSON.stringify(product.sizes)) : []
-    form.stems = Array.isArray(product.stems) ? JSON.parse(JSON.stringify(product.stems)) : []
-    form.care = product.care || ''
-    form.vaseLife = product.vaseLife || ''
-    form.scent = product.scent || ''
-    form.seoTitle = product.seoTitle || ''
-    form.seoDesc = product.seoDesc || ''
-    form.slug = product.slug || ''
-    form.sortOrder = product.sortOrder || 0
+    Object.assign(form, {
+      name: product.name || '',
+      category: product.category || '',
+      price: product.price || null,
+      stock: product.stock ?? 0,
+      status: product.status || 'active',
+      desc: product.desc || '',
+      fullDesc: product.fullDesc || '',
+      imageUrl: product.imageUrl || '',
+      videoUrl: product.videoUrl || '',
+      gallery: Array.isArray(product.gallery) ? [...product.gallery] : [],
+      emoji: product.emoji || '🌸',
+      bg: product.bg || BG_PRESETS[0].value,
+      isBestseller: product.isBestseller || false,
+      isNew: product.isNew || false,
+      isFeatured: product.isFeatured || false,
+      tags: Array.isArray(product.tags) ? [...product.tags] : [],
+      occasions: Array.isArray(product.occasions) ? [...product.occasions] : [],
+      seasons: Array.isArray(product.seasons) ? [...product.seasons] : [],
+      colors: Array.isArray(product.colors) ? [...product.colors] : [],
+      sizes: Array.isArray(product.sizes) ? JSON.parse(JSON.stringify(product.sizes)) : [],
+      stems: Array.isArray(product.stems) ? JSON.parse(JSON.stringify(product.stems)) : [],
+      care: product.care || '',
+      vaseLife: product.vaseLife || '',
+      scent: product.scent || '',
+      seoTitle: product.seoTitle || '',
+      seoDesc: product.seoDesc || '',
+      slug: product.slug || '',
+      sortOrder: product.sortOrder || 0
+    })
   } else {
-    form.name = ''
-    form.category = ''
-    form.price = null
-    form.stock = 0
-    form.status = 'active'
-    form.desc = ''
-    form.fullDesc = ''
-    form.imageUrl = ''
-    form.videoUrl = ''
-    form.gallery = []
-    form.emoji = '🌸'
-    form.bg = BG_PRESETS[0].value
-    form.isBestseller = false
-    form.isNew = false
-    form.isFeatured = false
-    form.tags = []
-    form.occasions = []
-    form.seasons = []
-    form.colors = []
-    form.sizes = []
-    form.stems = []
-    form.care = ''
-    form.vaseLife = ''
-    form.scent = ''
-    form.seoTitle = ''
-    form.seoDesc = ''
-    form.slug = ''
-    form.sortOrder = 0
+    Object.assign(form, {
+      name: '', category: '', price: null, stock: 0, status: 'active',
+      desc: '', fullDesc: '', imageUrl: '', videoUrl: '', gallery: [],
+      emoji: '🌸', bg: BG_PRESETS[0].value,
+      isBestseller: false, isNew: false, isFeatured: false,
+      tags: [], occasions: [], seasons: [], colors: [], sizes: [], stems: [],
+      care: '', vaseLife: '', scent: '', seoTitle: '', seoDesc: '', slug: '', sortOrder: 0
+    })
   }
-  
   showModal.value = true
 }
 
@@ -701,20 +692,11 @@ function closeModal() {
   galleryUploading.value = false
 }
 
-// Primary image upload
 async function uploadPrimaryImage(event) {
   const file = event.target.files[0]
   if (!file) return
-  
-  if (!file.type.startsWith('image/')) {
-    showToast('Please select an image file', 'error')
-    return
-  }
-  
-  if (file.size > 5 * 1024 * 1024) {
-    showToast('Image exceeds 5MB limit', 'error')
-    return
-  }
+  if (!file.type.startsWith('image/')) { showToast('Please select an image file', 'error'); return }
+  if (file.size > 5 * 1024 * 1024) { showToast('Image exceeds 5MB limit', 'error'); return }
   
   const uploadData = new FormData()
   uploadData.append('image', file)
@@ -735,7 +717,6 @@ async function uploadPrimaryImage(event) {
   }
 }
 
-// Multi-upload gallery
 async function uploadMultipleGalleryImages(event) {
   const files = event.target.files
   if (!files || files.length === 0) return
@@ -745,41 +726,24 @@ async function uploadMultipleGalleryImages(event) {
   totalUploadCount.value = files.length
   
   try {
-    if (!Array.isArray(form.gallery)) {
-      form.gallery = []
-    }
-    
+    if (!Array.isArray(form.gallery)) form.gallery = []
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
-      
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith('image/') || file.size > 5 * 1024 * 1024) {
         uploadedCount.value++
         continue
       }
-      
-      if (file.size > 5 * 1024 * 1024) {
-        uploadedCount.value++
-        continue
-      }
-      
       const uploadData = new FormData()
       uploadData.append('image', file)
-      
       try {
         const res = await fetch('/api/upload', { method: 'POST', body: uploadData })
         if (res.ok) {
           const payload = await res.json()
-          if (payload.url && !form.gallery.includes(payload.url)) {
-            form.gallery.push(payload.url)
-          }
+          if (payload.url && !form.gallery.includes(payload.url)) form.gallery.push(payload.url)
         }
-      } catch (uploadErr) {
-        console.error(`[UPLOAD_ERROR] ${file.name}:`, uploadErr)
-      }
-      
+      } catch (uploadErr) { console.error(`[UPLOAD_ERROR] ${file.name}:`, uploadErr) }
       uploadedCount.value++
     }
-    
     showToast(`Uploaded ${form.gallery.length} gallery images`, 'success')
   } catch (err) {
     console.error('[BATCH_UPLOAD_ERROR]', err)
@@ -792,13 +756,11 @@ async function uploadMultipleGalleryImages(event) {
   }
 }
 
-// Save product
 async function saveProduct() {
   if (!form.name || !form.category || !form.price) {
     showToast('Please fill in all required fields', 'error')
     return
   }
-  
   if (galleryUploading.value) {
     showToast('Please wait for gallery uploads to complete', 'error')
     return
@@ -807,50 +769,26 @@ async function saveProduct() {
   saving.value = true
   try {
     const payload = {
-      name: form.name,
-      category: form.category,
-      price: form.price,
-      stock: form.stock,
-      status: form.status,
-      desc: form.desc,
-      fullDesc: form.fullDesc,
-      imageUrl: form.imageUrl,
-      videoUrl: form.videoUrl,
-      gallery: form.gallery,
-      emoji: form.emoji,
-      bg: form.bg,
-      isBestseller: form.isBestseller,
-      isNew: form.isNew,
-      isFeatured: form.isFeatured,
-      tags: form.tags,
-      occasions: form.occasions,
-      seasons: form.seasons,
-      colors: form.colors,
-      sizes: form.sizes,
-      stems: form.stems,
-      care: form.care,
-      vaseLife: form.vaseLife,
-      scent: form.scent,
-      seoTitle: form.seoTitle,
-      seoDesc: form.seoDesc,
-      slug: form.slug,
+      name: form.name, category: form.category, price: form.price, stock: form.stock,
+      status: form.status, desc: form.desc, fullDesc: form.fullDesc, imageUrl: form.imageUrl,
+      videoUrl: form.videoUrl, gallery: form.gallery, emoji: form.emoji, bg: form.bg,
+      isBestseller: form.isBestseller, isNew: form.isNew, isFeatured: form.isFeatured,
+      tags: form.tags, occasions: form.occasions, seasons: form.seasons, colors: form.colors,
+      sizes: form.sizes, stems: form.stems, care: form.care, vaseLife: form.vaseLife,
+      scent: form.scent, seoTitle: form.seoTitle, seoDesc: form.seoDesc, slug: form.slug,
       sortOrder: form.sortOrder
     }
     
     let responseData
     if (editingProduct.value) {
       responseData = await apiFetch(`/api/products/${editingProduct.value.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(payload),
+        method: 'PATCH', body: JSON.stringify(payload)
       })
       const idx = products.value.findIndex(p => p.id === editingProduct.value.id)
       if (idx !== -1) products.value[idx] = responseData.data
       showToast(`"${responseData.data.name}" updated successfully`)
     } else {
-      responseData = await apiFetch('/api/products', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
+      responseData = await apiFetch('/api/products', { method: 'POST', body: JSON.stringify(payload) })
       products.value.push(responseData.data)
       showToast(`"${responseData.data.name}" added to catalogue`)
     }
@@ -863,7 +801,6 @@ async function saveProduct() {
   }
 }
 
-// Delete functions
 function confirmDelete(product) {
   deletingProduct.value = product
   showDeleteConfirm.value = true
@@ -881,47 +818,22 @@ async function deleteProduct() {
   }
 }
 
-// Duplicate product
 async function duplicateProduct(product) {
   try {
     const uniqueHash = Math.random().toString(36).substring(2, 6)
     const newName = `${product.name} (Copy ${uniqueHash})`
-
     const payload = {
-      name: newName,
-      category: product.category,
-      price: product.price,
-      stock: 0,
-      status: 'draft',
-      desc: product.desc,
-      fullDesc: product.fullDesc,
-      imageUrl: product.imageUrl,
-      videoUrl: product.videoUrl || '',
-      gallery: Array.isArray(product.gallery) ? [...product.gallery] : [],
-      emoji: product.emoji || '🌸',
-      bg: product.bg,
-      isBestseller: false,
-      isNew: false,
-      isFeatured: false,
-      tags: product.tags || [],
-      occasions: product.occasions || [],
-      seasons: product.seasons || [],
-      colors: product.colors || [],
-      sizes: product.sizes || [],
-      stems: product.stems || [],
-      care: product.care || '',
-      vaseLife: product.vaseLife || '',
-      scent: product.scent || '',
-      seoTitle: product.seoTitle || '',
-      seoDesc: product.seoDesc || '',
+      name: newName, category: product.category, price: product.price, stock: 0,
+      status: 'draft', desc: product.desc, fullDesc: product.fullDesc, imageUrl: product.imageUrl,
+      videoUrl: product.videoUrl || '', gallery: Array.isArray(product.gallery) ? [...product.gallery] : [],
+      emoji: product.emoji || '🌸', bg: product.bg, isBestseller: false, isNew: false,
+      isFeatured: false, tags: product.tags || [], occasions: product.occasions || [],
+      seasons: product.seasons || [], colors: product.colors || [], sizes: product.sizes || [],
+      stems: product.stems || [], care: product.care || '', vaseLife: product.vaseLife || '',
+      scent: product.scent || '', seoTitle: product.seoTitle || '', seoDesc: product.seoDesc || '',
       sortOrder: (product.sortOrder || 0) + 1
     }
-
-    const json = await apiFetch('/api/products', {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    })
-    
+    const json = await apiFetch('/api/products', { method: 'POST', body: JSON.stringify(payload) })
     products.value.push(json.data)
     showToast(`"${json.data.name}" duplicated as draft`, 'success')
   } catch (e) {
@@ -930,7 +842,6 @@ async function duplicateProduct(product) {
   }
 }
 
-// Bulk actions
 function toggleSelectAll(e) {
   selected.value = e.target.checked ? filteredProducts.value.map(p => p.id) : []
 }
@@ -949,12 +860,9 @@ async function bulkDelete() {
 
 async function bulkSetStatus(status) {
   try {
-    await Promise.all(
-      selected.value.map(id => apiFetch(`/api/products/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status }),
-      }))
-    )
+    await Promise.all(selected.value.map(id => apiFetch(`/api/products/${id}`, {
+      method: 'PATCH', body: JSON.stringify({ status })
+    })))
     products.value.forEach(p => { if (selected.value.includes(p.id)) p.status = status })
     showToast(`${selected.value.length} products set to "${status}"`)
     selected.value = []
@@ -963,19 +871,13 @@ async function bulkSetStatus(status) {
   }
 }
 
-// Sizes & Stems helpers
 function addSize() { form.sizes.push({ name: '', stemRange: '', price: null }) }
 function removeSize(i) { form.sizes.splice(i, 1) }
 function addStem() { form.stems.push({ emoji: '🌸', name: '' }) }
 function removeStem(i) { form.stems.splice(i, 1) }
 
-// Status badge helper
 function statusBadge(status) {
-  const map = { 
-    active: 'bg-[#9DB6A0]/20 text-[#486B4C]', 
-    draft: 'bg-amber-100 text-amber-600', 
-    archived: 'bg-ink/10 text-ink/40' 
-  }
+  const map = { active: 'bg-[#9DB6A0]/20 text-[#486B4C]', draft: 'bg-amber-100 text-amber-600', archived: 'bg-ink/10 text-ink/40' }
   return map[status || 'active'] || map.active
 }
 </script>
@@ -983,14 +885,9 @@ function statusBadge(status) {
 <style scoped>
 .modal-enter-active, .modal-leave-active { transition: opacity 0.25s ease; }
 .modal-enter-from, .modal-leave-to { opacity: 0; }
-
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
-
-.animate-fadeIn {
-  animation: fadeIn 0.2s ease-out forwards;
-}
-
+.animate-fadeIn { animation: fadeIn 0.2s ease-out forwards; }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }

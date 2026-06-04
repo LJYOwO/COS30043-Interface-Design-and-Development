@@ -1,14 +1,12 @@
 <template>
   <div class="contact-page min-h-screen py-24 relative overflow-hidden">
-    <!-- Decorative background blobs -->
     <div class="blob blob-1" aria-hidden="true"/>
     <div class="blob blob-2" aria-hidden="true"/>
     <div class="blob blob-3" aria-hidden="true"/>
 
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-      <!-- Hero header -->
-      <div class="text-center mb-20">
+      <div class="text-center mb-20 reveal-contact">
         <p class="eyebrow">Get in Touch</p>
         <h1 class="page-title">Let's Talk<br><em>Blooms</em></h1>
         <p class="page-subtitle">Whether it's a bespoke wedding arrangement or a question about your order, our artisans are here.</p>
@@ -17,11 +15,9 @@
         </div>
       </div>
 
-      <!-- Two-column layout -->
       <div class="contact-grid">
 
-        <!-- LEFT: Form -->
-        <div class="form-card">
+        <div class="form-card reveal-contact">
           <div class="form-card-header">
             <span class="card-pill">✉️ Send a Message</span>
           </div>
@@ -58,10 +54,9 @@
           </form>
         </div>
 
-        <!-- RIGHT: Info cards -->
         <div class="info-column">
 
-          <div class="info-card">
+          <div class="info-card reveal-contact">
             <div class="info-icon">📍</div>
             <div>
               <h3>Flagship Studio</h3>
@@ -69,7 +64,7 @@
             </div>
           </div>
 
-          <div class="info-card">
+          <div class="info-card reveal-contact">
             <div class="info-icon">🕐</div>
             <div>
               <h3>Operating Hours</h3>
@@ -80,7 +75,7 @@
             </div>
           </div>
 
-          <div class="info-card">
+          <div class="info-card reveal-contact">
             <div class="info-icon">📞</div>
             <div>
               <h3>Direct Contact</h3>
@@ -91,8 +86,7 @@
             </div>
           </div>
 
-          <!-- Social strip -->
-          <div class="social-strip">
+          <div class="social-strip reveal-contact">
             <span class="social-label">Follow the studio</span>
             <a href="#" class="social-btn" aria-label="Instagram">
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
@@ -106,15 +100,52 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
+
 function submitForm() {
   alert('Thank you for reaching out! A FloraLab artisan will get back to you shortly. 🌸')
 }
+
+onMounted(() => {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible')
+      }
+    })
+  }, { 
+    threshold: 0.1 // Trigger when 10% of element is visible
+  })
+
+  // Observe all animated components
+  document.querySelectorAll('.reveal-contact').forEach(el => observer.observe(el))
+})
 </script>
 
 <style scoped>
-/* ── Page shell ─────────────────────────────────────────── */
+/* Page shell */
 .contact-page {
   background: linear-gradient(160deg, #FDFBF7 0%, #EAE2FE 45%, #F9E5E5 100%);
+}
+
+/* Unified elastic reveal animation base styles */
+.reveal-contact {
+  opacity: 0;
+  transform: translateY(40px) scale(0.97);
+  transition: opacity 0.85s cubic-bezier(0.34, 1.56, 0.64, 1),
+              transform 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.reveal-contact.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Staggered delay for desktop (smooth cascading effect) */
+@media (min-width: 768px) {
+  .info-column .reveal-contact:nth-child(1) { transition-delay: 0.1s; }
+  .info-column .reveal-contact:nth-child(2) { transition-delay: 0.2s; }
+  .info-column .reveal-contact:nth-child(3) { transition-delay: 0.3s; }
+  .info-column .reveal-contact:nth-child(4) { transition-delay: 0.4s; }
 }
 
 /* Background blobs */
@@ -140,7 +171,7 @@ function submitForm() {
   top: 40%; left: 40%; opacity: 0.2;
 }
 
-/* ── Hero typography ────────────────────────────────────── */
+/* Hero typography */
 .eyebrow {
   font-size: 0.625rem;
   font-weight: 800;
@@ -185,7 +216,7 @@ function submitForm() {
   background: currentColor;
 }
 
-/* ── Layout grid ────────────────────────────────────────── */
+/* Layout grid */
 .contact-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -199,7 +230,7 @@ function submitForm() {
   }
 }
 
-/* ── Form card ──────────────────────────────────────────── */
+/* Form card */
 .form-card {
   background: rgba(255,255,255,0.75);
   backdrop-filter: blur(20px);
@@ -227,7 +258,7 @@ function submitForm() {
   border: 1px solid rgba(206,130,128,0.2);
 }
 
-/* ── Form fields ────────────────────────────────────────── */
+/* Form fields */
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -269,7 +300,7 @@ function submitForm() {
 .field textarea { resize: none; }
 .field select { cursor: pointer; }
 
-/* ── Submit button ──────────────────────────────────────── */
+/* Submit button */
 .submit-btn {
   width: 100%;
   display: flex;
@@ -300,7 +331,7 @@ function submitForm() {
 }
 .submit-btn:hover .btn-arrow { transform: translateX(4px); }
 
-/* ── Info column ────────────────────────────────────────── */
+/* Info column */
 .info-column {
   display: flex;
   flex-direction: column;
@@ -316,7 +347,7 @@ function submitForm() {
   border: 1px solid rgba(255,255,255,0.85);
   border-radius: 1.5rem;
   padding: 1.4rem 1.6rem;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.85s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-shadow: 0 2px 20px rgba(157,182,160,0.08);
 }
 .info-card:hover {
@@ -363,7 +394,7 @@ function submitForm() {
 .day { color: rgba(26,26,46,0.5); font-weight: 600; }
 .time { color: rgba(26,26,46,0.8); font-weight: 500; }
 
-/* ── Social strip ───────────────────────────────────────── */
+/* Social strip */
 .social-strip {
   display: flex;
   align-items: center;
@@ -372,6 +403,7 @@ function submitForm() {
   background: rgba(255,255,255,0.4);
   border: 1px solid rgba(255,255,255,0.7);
   border-radius: 1.5rem;
+  transition: opacity 0.85s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .social-label {
   font-size: 0.7rem;

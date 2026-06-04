@@ -2,13 +2,14 @@
   <div class="space-y-6 animate-fade-up">
     
     <!-- ── Header ────────────────────────────────────────────────────────── -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex items-center justify-between gap-4">
       <div>
-        <h2 class="font-serif text-2xl text-ink font-bold">Welcome back, Admin 🌸</h2>
-        <p class="text-sm text-ink/50 mt-0.5">Here is what's happening with your store today.</p>
+        <h2 class="font-serif text-xl sm:text-2xl text-ink font-bold">Welcome back, Admin 🌸</h2>
+        <p class="text-sm text-ink/50 mt-0.5 hidden sm:block">Here is what's happening with your store today.</p>
       </div>
-      <button @click="fetchMetrics" class="px-4 py-2 rounded-full border border-cream-200 text-sm font-bold tracking-wider uppercase text-ink/60 hover:bg-cream-200 transition-colors shadow-sm">
-        🔄 Sync Data
+      <button @click="fetchMetrics" class="flex-shrink-0 p-2.5 sm:px-4 sm:py-2 rounded-full border border-cream-200 text-sm font-bold tracking-wider uppercase text-ink/60 hover:bg-cream-200 transition-colors shadow-sm">
+        <span class="sm:hidden">🔄</span>
+        <span class="hidden sm:inline">🔄 Sync Data</span>
       </button>
     </div>
 

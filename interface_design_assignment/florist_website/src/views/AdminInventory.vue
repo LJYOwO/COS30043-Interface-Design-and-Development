@@ -1,50 +1,56 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-5"> <!-- 稍微收紧外边距，让排版更紧凑 -->
 
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div>
-        <h2 class="font-serif text-2xl text-ink font-bold">Flower Inventory</h2>
-        <p class="text-sm text-ink/50 mt-0.5">Manage stems available in the Bouquet Customizer.</p>
-      </div>
-      <button
-        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#CE8280] text-white text-sm font-medium hover:bg-[#B87472] transition-all shadow-petal"
-        @click="openModal(null)"
-      >
-        + Add Flower
-      </button>
-    </div>
-
+    <!-- ── 1. 数据看板置顶 (确立视觉重心) ────────────────────────────────── -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <div v-for="s in inventoryStats" :key="s.label"
-           class="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-cream-200">
-        <p class="text-xs text-ink/50 mb-1">{{ s.label }}</p>
-        <p class="font-serif text-xl font-bold text-ink">{{ s.value }}</p>
+           class="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-cream-200 shadow-xs transition-all hover:bg-white/90">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-ink/40 mb-1">{{ s.label }}</p>
+        <p class="font-serif text-xl font-bold text-ink leading-none">{{ s.value }}</p>
       </div>
     </div>
 
-    <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-      <div class="flex items-center gap-3 flex-wrap">
-        <div class="relative">
+    <!-- ── 2. 统一控制中心面板 (消除零散感与空洞) ────────────────────────── -->
+    <div class="bg-white/40 backdrop-blur-sm border border-cream-200/60 rounded-3xl p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
+      
+      <!-- 组合：搜索 + 筛选 -->
+      <div class="flex flex-1 flex-col sm:flex-row gap-2">
+        <!-- Search -->
+        <div class="relative flex-1">
           <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
           </svg>
           <input v-model="search" type="text" placeholder="Search flowers…"
-            class="pl-9 pr-4 py-2 text-sm bg-white/70 border border-cream-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#CE8280]/30 w-48"/>
+            class="pl-9 pr-4 py-2 text-sm bg-white border border-cream-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#CE8280]/30 w-full shadow-2xs"/>
         </div>
+        <!-- Filter -->
         <select v-model="categoryFilter"
-          class="text-xs bg-white/70 border border-cream-200 rounded-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#CE8280]/30 cursor-pointer">
+          class="text-xs bg-white border border-cream-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#CE8280]/30 cursor-pointer shadow-2xs font-bold text-ink/60">
           <option value="">All Categories</option>
           <option v-for="cat in CATEGORIES" :key="cat" :value="cat">{{ cat }}</option>
         </select>
       </div>
-      <div class="flex items-center gap-4 text-xs text-ink/50">
-        <span class="flex items-center gap-1.5">
+
+      <!-- 操作：添加按钮合流进来 -->
+      <button
+        class="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-full bg-[#CE8280] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#B87472] transition-all shadow-petal h-9 flex-shrink-0"
+        @click="openModal(null)"
+      >
+        <span>＋</span> Add Flower
+      </button>
+    </div>
+
+    <!-- ── 3. 状态图例与元信息栏 ────────────────────────────────────────── -->
+    <div class="flex items-center justify-between gap-4 px-1 text-xs text-ink/50">
+      <div class="flex items-center gap-4">
+        <span class="flex items-center gap-1.5 font-semibold">
           <span class="w-2 h-2 rounded-full bg-red-400 inline-block"></span>Low Stock ({{ lowStockCount }})
         </span>
-        <span class="flex items-center gap-1.5">
+        <span class="flex items-center gap-1.5 font-semibold">
           <span class="w-2 h-2 rounded-full bg-[#9DB6A0] inline-block"></span>In Stock ({{ inStockCount }})
         </span>
       </div>
+      <span class="text-[10px] font-bold uppercase tracking-widest text-ink/30 hidden sm:inline">Stock Management Grid</span>
     </div>
 
     <div v-if="loading" class="space-y-2">
@@ -57,98 +63,146 @@
       <button class="text-xs text-[#9DB6A0] underline" @click="fetchFlowers">Retry</button>
     </div>
 
-    <div v-else class="bg-white/60 backdrop-blur-sm rounded-3xl border border-cream-200 overflow-hidden shadow-sm">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-cream-200 bg-cream-50">
-              <th class="text-left px-5 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Flower</th>
-              <th class="text-left px-4 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Category</th>
-              <th class="text-left px-4 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Origin</th>
-              <th class="text-left px-4 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Price/Stem</th>
-              <th class="text-left px-4 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Stock</th>
-              <th class="text-left px-4 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Status</th>
-              <th class="text-left px-4 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Vase Life</th>
-              <th class="text-left px-4 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Scent</th>
-              <th class="text-right px-5 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-cream-100">
-            <tr v-for="flower in filteredInventory" :key="flower.id"
-                class="hover:bg-white transition-colors group">
+    <!-- Wrap mobile and desktop views with template v-else -->
+    <template v-else>
+      
+      <!-- Mobile Card List (sm and below) -->
+      <div class="md:hidden space-y-3">
+        <div
+          v-for="flower in filteredInventory" :key="flower.id"
+          class="bg-white/70 rounded-2xl border border-cream-200 p-4 shadow-sm"
+        >
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0 border border-cream-100"
+                 :style="{ background: flower.bg || bgMap[flower.category] || BG_PRESETS[0].value }">
+              <img v-if="flower.imageUrl" :src="flower.imageUrl" class="w-full h-full object-contain p-1" />
+              <span v-else>{{ flower.emoji }}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-ink text-sm truncate">{{ flower.name }}</p>
+              <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+                <span class="px-2 py-0.5 rounded-md border border-cream-200 text-[10px] font-bold uppercase text-ink/60">{{ flower.category }}</span>
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border" :class="statusBadge(flower.stock)">{{ stockLabel(flower.stock) }}</span>
+              </div>
+            </div>
+            <p class="font-bold text-[#CE8280] text-sm flex-shrink-0">RM {{ flower.price?.toFixed(2) }}</p>
+          </div>
 
-              <td class="px-5 py-3.5">
-                <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0 shadow-xs border border-cream-100"
-                       :style="{ background: flower.bg || bgMap[flower.category] || BG_PRESETS[0].value }">
-                    <img v-if="flower.imageUrl" :src="flower.imageUrl" class="w-full h-full object-contain drop-shadow-sm p-1" />
-                    <span v-else>{{ flower.emoji }}</span>
-                  </div>
-                  <div>
-                    <p class="font-bold text-ink text-sm">{{ flower.name }}</p>
-                    <p class="text-[10px] text-ink/40 font-mono">id: {{ flower.id }}</p>
-                  </div>
-                </div>
-              </td>
+          <div class="flex items-center gap-3 mb-3">
+            <div class="flex items-center gap-2 flex-1">
+              <span class="text-[10px] text-ink/50 font-bold uppercase tracking-wider">Stock</span>
+              <span class="font-bold text-ink text-sm">{{ flower.stock }}</span>
+              <div class="flex-1 h-1.5 rounded-full bg-cream-200 overflow-hidden">
+                <div class="h-full rounded-full"
+                     :class="flower.stock < 20 ? 'bg-red-400' : flower.stock < 50 ? 'bg-amber-400' : 'bg-[#9DB6A0]'"
+                     :style="{ width: `${Math.min(100, (flower.stock / 150) * 100)}%` }"/>
+              </div>
+            </div>
+            <div v-if="flower.origin" class="text-[10px] text-ink/50">📍 {{ flower.origin }}</div>
+          </div>
 
-              <td class="px-4 py-3.5">
-                <span class="px-2.5 py-1 rounded-md border border-cream-200 text-[10px] font-bold tracking-wider uppercase text-ink/60">{{ flower.category }}</span>
-              </td>
+          <div class="flex items-center gap-2 pt-2 border-t border-cream-100">
+            <button class="flex-1 py-1.5 rounded-xl bg-cream-50 hover:bg-cream-200 text-xs font-bold text-ink/60 hover:text-ink transition-colors border border-cream-100"
+                    @click="openModal(flower)">✏️ Edit</button>
+            <button class="flex-1 py-1.5 rounded-xl bg-cream-50 hover:bg-[#9DB6A0]/20 text-xs font-bold text-ink/60 hover:text-[#486B4C] transition-colors border border-cream-100"
+                    @click="quickRestock(flower)">📦 Restock</button>
+            <button class="py-1.5 px-3 rounded-xl bg-cream-50 hover:bg-red-50 text-xs font-bold text-ink/40 hover:text-red-500 transition-colors border border-cream-100"
+                    @click="confirmDelete(flower)">🗑️</button>
+          </div>
+        </div>
 
-              <td class="px-4 py-3.5 text-xs text-ink/60 font-medium">{{ flower.origin || '—' }}</td>
+        <div v-if="filteredInventory.length === 0" class="text-center py-12 text-ink/40 text-sm bg-white/60 rounded-3xl border border-cream-200">
+          <span class="text-3xl block mb-2">🌾</span>No flowers match your search.
+        </div>
 
-              <td class="px-4 py-3.5 font-bold text-ink">RM {{ flower.price?.toFixed(2) }}</td>
-
-              <td class="px-4 py-3.5">
-                <div class="flex items-center gap-2">
-                  <span class="font-bold text-ink text-sm w-6">{{ flower.stock }}</span>
-                  <div class="w-14 h-1.5 rounded-full bg-cream-200 overflow-hidden">
-                    <div class="h-full rounded-full transition-all"
-                         :class="flower.stock < 20 ? 'bg-red-400' : flower.stock < 50 ? 'bg-amber-400' : 'bg-[#9DB6A0]'"
-                         :style="{ width: `${Math.min(100, (flower.stock / 150) * 100)}%` }"/>
-                  </div>
-                </div>
-              </td>
-
-              <td class="px-4 py-3.5">
-                <span class="px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase border" :class="statusBadge(flower.stock)">
-                  {{ stockLabel(flower.stock) }}
-                </span>
-              </td>
-
-              <td class="px-4 py-3.5 text-xs text-ink/60">{{ flower.vaseLife || '—' }}</td>
-              <td class="px-4 py-3.5 text-xs text-ink/60">{{ flower.scent || '—' }}</td>
-
-              <td class="px-5 py-3.5">
-                <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button class="p-1.5 rounded-lg bg-cream-50 hover:bg-cream-200 text-ink/50 hover:text-ink transition-colors border border-cream-100"
-                          title="Edit" @click="openModal(flower)">✏️</button>
-                  <button class="p-1.5 rounded-lg bg-cream-50 hover:bg-[#9DB6A0]/20 text-ink/50 hover:text-[#9DB6A0] transition-colors border border-cream-100"
-                          title="Quick restock +50" @click="quickRestock(flower)">📦</button>
-                  <button class="p-1.5 rounded-lg bg-cream-50 hover:bg-red-50 text-ink/50 hover:text-red-500 transition-colors border border-cream-100"
-                          title="Delete" @click="confirmDelete(flower)">🗑️</button>
-                </div>
-              </td>
-            </tr>
-
-            <tr v-if="filteredInventory.length === 0">
-              <td colspan="9" class="text-center py-12 text-ink/40 text-sm">
-                <span class="text-3xl block mb-2">🌾</span>No flowers match your search.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <p class="text-xs text-ink/40 text-center pb-2">{{ filteredInventory.length }} of {{ inventory.length }} flowers</p>
       </div>
 
-      <div class="flex items-center justify-between px-5 py-3 border-t border-cream-100 text-xs text-ink/50 font-medium">
-        <span>{{ filteredInventory.length }} of {{ inventory.length }} flowers</span>
+      <!-- Desktop Table (md and above) -->
+      <div class="hidden md:block bg-white/60 backdrop-blur-sm rounded-3xl border border-cream-200 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-cream-200 bg-cream-50">
+                <th class="text-left px-5 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Flower</th>
+                <th class="text-left px-4 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Category</th>
+                <th class="text-left px-4 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Origin</th>
+                <th class="text-left px-4 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Price/Stem</th>
+                <th class="text-left px-4 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Stock</th>
+                <th class="text-left px-4 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Status</th>
+                <th class="text-left px-4 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Vase Life</th>
+                <th class="text-left px-4 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Scent</th>
+                <th class="text-right px-5 py-3 text-[10px] font-bold text-ink/50 uppercase tracking-widest">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-cream-100">
+              <tr v-for="flower in filteredInventory" :key="flower.id"
+                  class="hover:bg-white transition-colors group">
+                <td class="px-5 py-3.5">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0 shadow-xs border border-cream-100"
+                         :style="{ background: flower.bg || bgMap[flower.category] || BG_PRESETS[0].value }">
+                      <img v-if="flower.imageUrl" :src="flower.imageUrl" class="w-full h-full object-contain drop-shadow-sm p-1" />
+                      <span v-else>{{ flower.emoji }}</span>
+                    </div>
+                    <div>
+                      <p class="font-bold text-ink text-sm">{{ flower.name }}</p>
+                      <p class="text-[10px] text-ink/40 font-mono">id: {{ flower.id }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-3.5">
+                  <span class="px-2.5 py-1 rounded-md border border-cream-200 text-[10px] font-bold tracking-wider uppercase text-ink/60">{{ flower.category }}</span>
+                </td>
+                <td class="px-4 py-3.5 text-xs text-ink/60 font-medium">{{ flower.origin || '—' }}</td>
+                <td class="px-4 py-3.5 font-bold text-ink">RM {{ flower.price?.toFixed(2) }}</td>
+                <td class="px-4 py-3.5">
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-ink text-sm w-6">{{ flower.stock }}</span>
+                    <div class="w-14 h-1.5 rounded-full bg-cream-200 overflow-hidden">
+                      <div class="h-full rounded-full transition-all"
+                           :class="flower.stock < 20 ? 'bg-red-400' : flower.stock < 50 ? 'bg-amber-400' : 'bg-[#9DB6A0]'"
+                           :style="{ width: `${Math.min(100, (flower.stock / 150) * 100)}%` }"/>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-3.5">
+                  <span class="px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase border" :class="statusBadge(flower.stock)">
+                    {{ stockLabel(flower.stock) }}
+                  </span>
+                </td>
+                <td class="px-4 py-3.5 text-xs text-ink/60">{{ flower.vaseLife || '—' }}</td>
+                <td class="px-4 py-3.5 text-xs text-ink/60">{{ flower.scent || '—' }}</td>
+                <td class="px-5 py-3.5">
+                  <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button class="p-1.5 rounded-lg bg-cream-50 hover:bg-cream-200 text-ink/50 hover:text-ink transition-colors border border-cream-100"
+                            title="Edit" @click="openModal(flower)">✏️</button>
+                    <button class="p-1.5 rounded-lg bg-cream-50 hover:bg-[#9DB6A0]/20 text-ink/50 hover:text-[#9DB6A0] transition-colors border border-cream-100"
+                            title="Quick restock +50" @click="quickRestock(flower)">📦</button>
+                    <button class="p-1.5 rounded-lg bg-cream-50 hover:bg-red-50 text-ink/50 hover:text-red-500 transition-colors border border-cream-100"
+                            title="Delete" @click="confirmDelete(flower)">🗑️</button>
+                  </div>
+                </td>
+              </tr>
+              <tr v-if="filteredInventory.length === 0">
+                <td colspan="9" class="text-center py-12 text-ink/40 text-sm">
+                  <span class="text-3xl block mb-2">🌾</span>No flowers match your search.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="flex items-center justify-between px-5 py-3 border-t border-cream-100 text-xs text-ink/50 font-medium">
+          <span>{{ filteredInventory.length }} of {{ inventory.length }} flowers</span>
+        </div>
       </div>
-    </div>
+
+    </template>
 
     <Transition name="fade">
-      <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div v-if="showModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
         <div class="absolute inset-0 bg-ink/30 backdrop-blur-sm" @click="closeModal"/>
-        <div class="relative rounded-3xl shadow-glass-lg w-full max-w-lg overflow-hidden bg-white">
+        <div class="relative rounded-t-3xl sm:rounded-3xl shadow-glass-lg w-full sm:max-w-lg overflow-hidden bg-white">
 
           <div class="flex items-center justify-between px-6 py-4 border-b border-cream-200 bg-cream-50">
             <h3 class="font-serif text-lg font-bold text-ink">
@@ -158,7 +212,7 @@
                     @click="closeModal">✕</button>
           </div>
 
-          <div class="p-6 space-y-4 max-h-[68vh] overflow-y-auto">
+          <div class="p-6 space-y-4 max-h-[60vh] sm:max-h-[68vh] overflow-y-auto">
 
             <div class="grid grid-cols-3 gap-3">
               <div class="col-span-2">
@@ -347,7 +401,7 @@
 
     <Transition name="toast">
       <div v-if="toast.show"
-           class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-full text-sm font-bold tracking-wider uppercase text-white shadow-lg border border-white/20 flex items-center gap-2 whitespace-nowrap"
+           class="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-full text-sm font-bold tracking-wider uppercase text-white shadow-lg border border-white/20 flex items-center gap-2 whitespace-nowrap"
            :style="{ background: toast.type === 'success' ? '#9DB6A0' : '#CE8280' }">
         {{ toast.type === 'success' ? '✓' : '⚠️' }} {{ toast.message }}
       </div>
@@ -359,7 +413,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 
-// ── Constants ────────────────────────────────────────────────────────────
+// Constants
 const CATEGORIES = ['Roses', 'Seasonal', 'Foliage', 'Exotic', 'Delicate', 'Filler']
 const SEASONS    = [
   { name: 'Spring', icon: '🌸' },
@@ -386,11 +440,11 @@ const bgMap = {
   Filler:   'linear-gradient(135deg,#fafafa,#f0ebe0)',
 }
 
-// ── State ────────────────────────────────────────────────────────────────
+// State
 const inventory         = ref([])
 const loading           = ref(false)
 const saving            = ref(false)
-const imageUploading    = ref(false) // NEW: Upload lock state
+const imageUploading    = ref(false)
 const error             = ref('')
 const formError         = ref('')
 const search            = ref('')
@@ -414,7 +468,7 @@ function emptyForm() {
 }
 const modalForm = reactive(emptyForm())
 
-// ── API helpers ───────────────────────────────────────────────────────────
+// API helpers
 async function apiFetch(url, options = {}) {
   const res  = await fetch(url, {
     headers: { 'Content-Type': 'application/json' },
@@ -425,7 +479,7 @@ async function apiFetch(url, options = {}) {
   return json
 }
 
-// ── 🔥 FIX: Cloud Bucket Image Upload Handlers ────────────────────────────
+// Cloud Bucket Image Upload Handlers
 async function uploadFlowerImage(file) {
   if (!file.type.startsWith('image/')) {
     formError.value = 'Please upload a valid image file.'
@@ -440,7 +494,7 @@ async function uploadFlowerImage(file) {
     const res = await fetch('/api/upload', { method: 'POST', body: data })
     if (!res.ok) throw new Error('Cloud storage rejected the file payload.')
     const payload = await res.json()
-    modalForm.imageUrl = payload.url // Save the true bucket URL!
+    modalForm.imageUrl = payload.url
     showToast('Asset secured in cloud bucket', 'success')
   } catch (err) {
     formError.value = 'Upload Failed: ' + err.message
@@ -452,7 +506,7 @@ async function uploadFlowerImage(file) {
 function handleImageFile(e) {
   const file = e.target.files[0]
   if (file) uploadFlowerImage(file)
-  if (imgFileInput.value) imgFileInput.value.value = '' // reset input
+  if (imgFileInput.value) imgFileInput.value.value = ''
 }
 
 function handleImageDrop(e) {
@@ -461,7 +515,7 @@ function handleImageDrop(e) {
   if (file) uploadFlowerImage(file)
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────
+// Toast
 function showToast(message, type = 'success') {
   toast.value = { show: true, message, type }
   setTimeout(() => { toast.value.show = false }, 3000)
@@ -486,7 +540,7 @@ async function fetchFlowers() {
 
 onMounted(fetchFlowers)
 
-// ── Computed ──────────────────────────────────────────────────────────────
+// Computed
 const filteredInventory = computed(() =>
   inventory.value.filter(f => {
     const matchSearch   = !search.value || f.name.toLowerCase().includes(search.value.toLowerCase())
@@ -505,7 +559,7 @@ const inventoryStats = computed(() => [
       : 'RM 0.00' },
 ])
 
-// ── Helpers ───────────────────────────────────────────────────────────────
+// Helpers
 function stockLabel(stock) {
   if (stock === 0) return 'Out of Stock'
   if (stock < 20)  return 'Low Stock'
@@ -519,7 +573,7 @@ function statusBadge(stock) {
   return 'border-[#9DB6A0]/30 bg-[#9DB6A0]/10 text-[#486B4C]'
 }
 
-// ── Modal ─────────────────────────────────────────────────────────────────
+// Modal
 function openModal(flower) {
   formError.value     = ''
   editingFlower.value = flower
@@ -536,13 +590,13 @@ function openModal(flower) {
   showModal.value = true
 }
 function closeModal() {
-  if(imageUploading.value) return // Prevent closing while uploading
+  if(imageUploading.value) return
   showModal.value     = false
   editingFlower.value = null
   formError.value     = ''
 }
 
-// ── Save ─────────────────────────────────────────────────────────────────
+// Save
 async function saveFlower() {
   formError.value = ''
   if (!modalForm.name.trim()) { formError.value = 'Flower name is required.'; return }
@@ -587,7 +641,7 @@ async function saveFlower() {
   }
 }
 
-// ── Quick Restock ─────────────────────────────────────────────────────────
+// Quick Restock
 async function quickRestock(flower) {
   try {
     const newStock = (flower.stock ?? 0) + 50
@@ -602,7 +656,7 @@ async function quickRestock(flower) {
   }
 }
 
-// ── Delete ────────────────────────────────────────────────────────────────
+// Delete
 function confirmDelete(flower) {
   deletingFlower.value    = flower
   showDeleteConfirm.value = true

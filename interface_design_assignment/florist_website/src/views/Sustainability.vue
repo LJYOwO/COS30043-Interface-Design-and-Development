@@ -4,8 +4,7 @@
       <div class="orb orb-1"/><div class="orb orb-2"/><div class="orb orb-3"/>
     </div>
 
-    <!-- Hero -->
-    <div class="sustain-hero">
+    <div class="sustain-hero reveal-sustain">
       <div class="hero-content">
         <p class="eyebrow">Our Commitment</p>
         <h1 class="hero-title">Rooted in<br><em>Nature</em></h1>
@@ -15,17 +14,23 @@
           <div class="impact-pill">♻️ 100% plastic-free</div>
         </div>
       </div>
+      
       <div class="hero-visual" aria-hidden="true">
-        <div class="leaf-ring">
-          <span class="leaf-icon">🌿</span>
-          <span class="ring-label">Eco Studio</span>
+        <div class="leaf-ring relative overflow-hidden group">
+          <img 
+            src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=800&auto=format&fit=crop" 
+            class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+            alt="Eco Friendly Concept"
+          />
+          <div class="absolute bottom-4 inset-x-4 bg-white/70 backdrop-blur-md py-2 px-3 rounded-xl border border-white/40 text-center shadow-sm">
+            <span class="ring-label">🌿 Eco Studio</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Core pillars: big card row -->
     <div class="pillars-section">
-      <div class="pillar-card pillar-green">
+      <div class="pillar-card pillar-green reveal-sustain">
         <div class="pillar-icon-wrap">
           <span class="pillar-icon">♻️</span>
         </div>
@@ -40,7 +45,7 @@
         </div>
       </div>
 
-      <div class="pillar-card pillar-rose">
+      <div class="pillar-card pillar-rose reveal-sustain">
         <div class="pillar-icon-wrap">
           <span class="pillar-icon">👩‍🌾</span>
         </div>
@@ -55,7 +60,7 @@
         </div>
       </div>
 
-      <div class="pillar-card pillar-lavender">
+      <div class="pillar-card pillar-lavender reveal-sustain">
         <div class="pillar-icon-wrap">
           <span class="pillar-icon">🌱</span>
         </div>
@@ -71,8 +76,7 @@
       </div>
     </div>
 
-    <!-- Manifesto strip -->
-    <div class="manifesto-strip">
+    <div class="manifesto-strip reveal-sustain">
       <div class="manifesto-inner">
         <div class="manifesto-quote">
           <span class="quote-mark">"</span>
@@ -105,7 +109,6 @@
       </div>
     </div>
 
-    <!-- Certification row -->
     <div class="cert-row">
       <p class="cert-label">Recognised by</p>
       <div class="cert-badges">
@@ -117,6 +120,24 @@
     </div>
   </div>
 </template>
+
+<script setup>
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible')
+      }
+    })
+  }, { 
+    threshold: 0.1 // 露头 10% 即可触发，体验更丝滑
+  })
+
+  document.querySelectorAll('.reveal-sustain').forEach(el => observer.observe(el))
+})
+</script>
 
 <style scoped>
 /* ── Shell ──────────────────────────────────────────────── */
@@ -142,11 +163,16 @@
   z-index: 1;
   max-width: 72rem;
   margin: 0 auto;
-  padding: 6rem 1.5rem 4rem;
+  padding: 6rem 1.5rem 3rem; /* 🔥 移动端：更紧凑、精神的间距 */
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 3rem;
+}
+@media (min-width: 768px) {
+  .sustain-hero {
+    padding: 8rem 1.5rem 4rem; /* 🔥 桌面端：恢复原本的大气大气间距 */
+  }
 }
 .hero-content { flex: 1; }
 .eyebrow {
@@ -164,7 +190,7 @@
 }
 .hero-title {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(2.75rem, 7vw, 5rem);
+  font-size: clamp(2.25rem, 7vw, 4.5rem); 
   font-weight: 700;
   color: #1a2e1f;
   line-height: 1.05;
@@ -190,25 +216,33 @@
   border-radius: 999px;
 }
 
-/* Hero visual leaf ring */
+
 .hero-visual { flex-shrink: 0; display: none; }
-@media (min-width: 640px) { .hero-visual { display: flex; } }
+@media (min-width: 768px) { .hero-visual { display: flex; } }
 .leaf-ring {
-  width: 160px; height: 160px;
+  width: 280px; height: 280px; /* 放大长宽 */
   border-radius: 50%;
-  background: radial-gradient(circle, #EAF4EC 60%, rgba(157,182,160,0.3) 100%);
-  border: 3px solid rgba(157,182,160,0.4);
+  border: 4px solid white;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 0.4rem;
-  box-shadow: 0 8px 40px rgba(157,182,160,0.25);
+  box-shadow: 0 12px 48px rgba(72,107,76,0.15), 0 0 0 6px rgba(255,255,255,0.4);
 }
-.leaf-icon { font-size: 3.5rem; }
 .ring-label {
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #486B4C;
+}
+
+.reveal-sustain {
+  opacity: 0;
+  transform: translateY(45px) scale(0.97);
+  transition: opacity 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
+              transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.reveal-sustain.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 /* ── Pillars ────────────────────────────────────────────── */
@@ -223,18 +257,25 @@
 }
 @media (min-width: 640px) { .pillars-section { grid-template-columns: repeat(3, 1fr); } }
 
+.pillars-section .reveal-sustain:nth-child(1) { transition-delay: 0.05s; }
+.pillars-section .reveal-sustain:nth-child(2) { transition-delay: 0.15s; }
+.pillars-section .reveal-sustain:nth-child(3) { transition-delay: 0.25s; }
+
 .pillar-card {
   border-radius: 2rem;
-  padding: 2rem;
+  padding: 2.25rem 2rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
   border: 1.5px solid transparent;
   backdrop-filter: blur(18px);
-  transition: transform 0.25s, box-shadow 0.25s;
-  box-shadow: 0 4px 32px rgba(0,0,0,0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 32px rgba(72,107,76,0.04);
 }
-.pillar-card:hover { transform: translateY(-4px); box-shadow: 0 12px 48px rgba(0,0,0,0.1); }
+.pillar-card:hover { 
+  transform: translateY(-6px) scale(1.01); 
+  box-shadow: 0 16px 48px rgba(72,107,76,0.12); 
+}
 
 .pillar-green { background: rgba(234,244,236,0.85); border-color: rgba(157,182,160,0.4); }
 .pillar-rose  { background: rgba(253,240,240,0.85); border-color: rgba(206,130,128,0.3); }
@@ -294,21 +335,26 @@
 .manifesto-strip {
   position: relative; z-index: 1;
   max-width: 72rem;
-  margin: 3rem auto 0;
+  margin: 3.5rem auto 0;
   padding: 0 1.5rem;
 }
 .manifesto-inner {
-  background: rgba(255, 255, 255, 0.85); /* 明亮通透的白底磨砂 */
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.95);
   border-radius: 2.5rem;
-  padding: 3rem;
+  padding: 1.75rem 1.25rem; /* 🔥 移动端：大幅缩小内边距，解放文字横向空间 */
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2.5rem;
-  box-shadow: 0 8px 32px rgba(72,107,76,0.08); /* 极度柔和的绿色阴影 */
+  gap: 2rem;
+  box-shadow: 0 8px 32px rgba(72,107,76,0.08);
 }
-@media (min-width: 768px) { .manifesto-inner { grid-template-columns: 1fr 1.2fr; align-items: center; } }
+@media (min-width: 768px) {
+  .manifesto-inner {
+    padding: 3rem; 
+  }
+}
+
 
 .manifesto-quote { padding-right: 1rem; }
 .quote-mark {
@@ -316,14 +362,14 @@
   font-family: Georgia, serif;
   font-size: 5rem;
   line-height: 0.8;
-  color: rgba(72,107,76,0.15); /* 淡淡的森林绿引号 */
+  color: rgba(72,107,76,0.15);
   margin-bottom: 0.5rem;
 }
 .manifesto-quote p {
   font-family: Georgia, serif;
   font-style: italic;
   font-size: 1.15rem;
-  color: #1a2e1f; /* 深色主体文字，保证可读性 */
+  color: #1a2e1f;
   line-height: 1.65;
   margin-bottom: 1rem;
 }
@@ -332,7 +378,7 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #486B4C; /* 点缀色 */
+  color: #486B4C;
 }
 
 .manifesto-actions { display: flex; flex-direction: column; gap: 1.25rem; }
@@ -345,7 +391,7 @@
   font-size: 1.4rem;
   width: 2.5rem; height: 2.5rem;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(157,182,160,0.18); /* 清新浅绿底色 */
+  background: rgba(157,182,160,0.18);
   border-radius: 0.75rem;
   flex-shrink: 0;
 }
@@ -353,12 +399,12 @@
   display: block;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #1a2e1f; 
+  color: #1a2e1f;
   margin-bottom: 0.2rem;
 }
 .action-item p {
   font-size: 0.78rem;
-  color: rgba(26,46,31,0.65); 
+  color: rgba(26,46,31,0.65);
   line-height: 1.6;
   font-weight: 500;
 }
@@ -367,7 +413,7 @@
 .cert-row {
   position: relative; z-index: 1;
   max-width: 72rem;
-  margin: 2.5rem auto 0;
+  margin: 3.5rem auto 0;
   padding: 0 1.5rem;
   text-align: center;
 }

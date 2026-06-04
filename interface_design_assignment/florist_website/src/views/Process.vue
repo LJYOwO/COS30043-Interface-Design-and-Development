@@ -1,6 +1,12 @@
 <template>
   <div class="process-page">
-    <div class="bg-mesh" aria-hidden="true"/>
+    <!-- Upgraded background environment layer: floating ecological particles -->
+    <div class="bg-mesh" aria-hidden="true">
+      <span class="ambient-particle leaf-1">🌿</span>
+      <span class="ambient-particle flower-1">🌸</span>
+      <span class="ambient-particle star-1">✨</span>
+      <span class="ambient-particle pet-1">🍃</span>
+    </div>
 
     <section class="hero">
       <div class="hero-inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -129,19 +135,18 @@
 import { onMounted } from 'vue'
 
 onMounted(() => {
-  // 创建交叉观察器
+  // Create intersection observer for scroll-triggered animations
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
-      // 当组件进入视口（露出15%以上）时触发
       if (entry.isIntersecting) {
         entry.target.classList.add('visible')
       }
     })
   }, { 
-    threshold: 0.15 // 灵敏度设定：露出15%就开始播放动画
+    threshold: 0.15 // Trigger when 15% of element is visible
   })
 
-  // 抓取并观察所有的步骤条目
+  // Observe all step elements
   document.querySelectorAll('.reveal-step').forEach(el => observer.observe(el))
 })
 </script>
@@ -153,6 +158,7 @@ onMounted(() => {
   background: linear-gradient(170deg, #FDFBF7 0%, #EAE2FE 50%, #F9E5E5 100%);
   overflow-x: hidden;
 }
+
 .bg-mesh {
   position: fixed; inset: 0; pointer-events: none; z-index: 0;
   background:
@@ -160,7 +166,39 @@ onMounted(() => {
     radial-gradient(circle at 85% 75%, rgba(212,194,252,0.13) 0%, transparent 50%);
 }
 
-/* ── Hero ───────────────────────────────────────────────── */
+/* ── Ambient floating particles ────────────────────────── */
+.ambient-particle {
+  position: absolute;
+  font-size: 1.25rem;
+  opacity: 0.15;
+  filter: blur(0.5px);
+  pointer-events: none;
+  animation: floatAmbient 12s ease-in-out infinite;
+}
+
+/* Particle distribution across screen edges */
+.leaf-1 { top: 15%; left: 8%; animation-delay: 0s; }
+.flower-1 { top: 45%; right: 6%; animation-delay: -3s; font-size: 1.5rem; }
+.star-1 { top: 75%; left: 5%; animation-delay: -6s; opacity: 0.2; }
+.pet-1 { top: 25%; right: 12%; animation-delay: -9s; }
+
+@keyframes floatAmbient {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(15deg); }
+}
+
+/* ── Floating science badge with enhanced motion ────────── */
+.hero-deco {
+  flex-shrink: 0;
+  animation: floatingBadge 5s ease-in-out infinite;
+}
+
+@keyframes floatingBadge {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-18px) scale(1.02); }
+}
+
+/* ── Hero section ───────────────────────────────────────── */
 .hero {
   position: relative; z-index: 1;
   padding: 7rem 0 4rem;
@@ -193,7 +231,6 @@ onMounted(() => {
   font-size: 0.9rem; color: rgba(26,26,46,0.6);
   max-width: 44ch; line-height: 1.75; font-weight: 500;
 }
-.hero-deco { flex-shrink: 0; }
 .deco-ring { width: 160px; height: 160px; }
 .deco-svg  { width: 100%; height: 100%; }
 @media (max-width: 640px) { .hero-deco { display: none; } }
@@ -230,24 +267,20 @@ onMounted(() => {
   padding: 2rem 0;
 }
 
-/* 🔥 新增：核心“蹦出来”动画 CSS 特效控制 */
+/* Core "pop-out" reveal animation */
 .reveal-step {
   opacity: 0;
-  /* 初始状态：向下偏移 50px，并且轻微缩小，处于潜伏状态 */
-  transform: translateY(50px) scale(0.96); 
-  /* 核心：使用了弹簧缓动贝塞尔曲线 cubic-bezier(0.34, 1.56, 0.64, 1) */
-  /* 这会让组件在到达目标位置时，产生一个极其微妙、舒适的高级“果冻回弹”感，也就是你说的蹦出来！ */
+  transform: translateY(50px) scale(0.96);
   transition: opacity 0.85s cubic-bezier(0.34, 1.56, 0.64, 1),
               transform 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* 激活状态：当滚动条滚到对应位置，JS 会加上 visible 类名 */
 .reveal-step.visible {
   opacity: 1;
-  transform: translateY(0) scale(1); /* 完美归位 */
+  transform: translateY(0) scale(1);
 }
 
-/* Mobile: all steps full-width, number left */
+/* Mobile layout */
 @media (max-width: 767px) {
   .step, .step.step-flip {
     flex-direction: column;
@@ -272,7 +305,7 @@ onMounted(() => {
   }
 }
 
-/* Desktop: true alternating left/right */
+/* Desktop alternating layout */
 @media (min-width: 768px) {
   .step         { flex-direction: row; }
   .step.step-flip { flex-direction: row-reverse; }
@@ -297,7 +330,7 @@ onMounted(() => {
   }
 }
 
-/* Node dot */
+/* Node dot styles */
 .node-dot {
   width: 3rem; height: 3rem;
   border-radius: 50%;
@@ -311,7 +344,7 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-/* Card */
+/* Card styles */
 .step-card {
   background: rgba(255,255,255,0.82);
   backdrop-filter: blur(20px);
