@@ -35,7 +35,7 @@
       </div>
 
       <div class="flex items-center justify-between lg:justify-end gap-3 border-t lg:border-t-0 pt-2 lg:pt-0 border-cream-100 flex-shrink-0">
-<div class="relative bg-cream-100/80 rounded-xl p-1 flex items-center border border-cream-200/80 h-9 select-none overflow-hidden">
+        <div class="relative bg-cream-100/80 rounded-xl p-1 flex items-center border border-cream-200/80 h-9 select-none overflow-hidden">
           
           <div
             class="absolute top-1 bottom-1 rounded-lg bg-[#CE8280] shadow-2xs transition-all duration-300 cubic-bezier(0.34, 1.56, 0.64, 1)"
@@ -75,13 +75,12 @@
       <span class="text-[10px] font-bold uppercase tracking-widest text-ink/30 hidden sm:inline">Product Catalogue System</span>
     </div>
 
-    <!-- ── Rest of the template remains the same (Grid View, List View, Modal, etc.) ── -->
-    <!-- Grid View -->
+    <!-- Grid View - Enhanced Card Layout with Bottom Actions -->
     <div v-if="viewMode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
       <div
         v-for="product in filteredProducts"
         :key="product.id"
-        class="bg-white/60 backdrop-blur-sm rounded-3xl border border-cream-200 overflow-hidden group hover:shadow-glass-lg transition-all"
+        class="bg-white/60 backdrop-blur-sm rounded-3xl border border-cream-200 overflow-hidden hover:shadow-glass-lg transition-all flex flex-col"
       >
         <div class="relative h-44 flex items-center justify-center overflow-hidden" :style="{ background: product.bg || 'linear-gradient(135deg,#fde8e8,#f9d4d4)' }">
           <img v-if="product.imageUrl" :src="product.imageUrl" class="w-full h-full object-cover" :alt="product.name" />
@@ -91,28 +90,29 @@
               {{ product.status || 'active' }}
             </span>
           </div>
-          <div class="absolute inset-0 bg-ink/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-            <button class="w-9 h-9 rounded-full bg-white flex items-center justify-center hover:bg-cream transition-colors text-sm" title="Edit" @click="openModal(product)">✏️</button>
-            <button class="w-9 h-9 rounded-full bg-white flex items-center justify-center hover:bg-cream transition-colors text-sm" title="Duplicate" @click="duplicateProduct(product)">📋</button>
-            <button class="w-9 h-9 rounded-full bg-white flex items-center justify-center hover:bg-red-50 transition-colors text-sm" title="Delete" @click="confirmDelete(product)">🗑️</button>
-          </div>
         </div>
-        <div class="p-4 space-y-2">
-          <div class="flex items-start justify-between gap-2">
+        
+        <div class="p-4 flex flex-col flex-1">
+          <div class="flex items-start justify-between gap-2 mb-2">
             <div>
               <p class="font-serif font-semibold text-ink text-sm leading-tight">{{ product.name }}</p>
               <p class="text-[11px] text-ink/50 mt-0.5">{{ product.category }}</p>
             </div>
             <p class="font-bold text-sm text-[#CE8280] flex-shrink-0">${{ product.price }}</p>
           </div>
-          <div class="flex flex-wrap gap-1">
+          <div class="flex flex-wrap gap-1 mb-4">
             <span v-for="tag in (product.tags || []).slice(0, 3)" :key="tag" class="px-1.5 py-0.5 bg-lavender/20 text-lavender-400 rounded-md text-[10px] font-medium">
               {{ tag }}
             </span>
           </div>
-          <div class="flex items-center justify-between text-xs text-ink/50 pt-1 border-t border-cream-100">
-            <span>Stock: {{ product.stock ?? '—' }}</span>
-            <span>{{ (product.gallery && product.gallery.length) || 0 }} gallery assets</span>
+          
+          <div class="mt-auto flex items-center justify-between text-xs text-ink/50 pt-3 border-t border-cream-100">
+            <span>Stock: <strong class="text-ink">{{ product.stock ?? '—' }}</strong></span>
+            <div class="flex items-center gap-1">
+              <button class="p-1.5 rounded-lg hover:bg-cream-200 text-ink/50 hover:text-ink transition-colors" title="Edit" @click="openModal(product)">✏️</button>
+              <button class="p-1.5 rounded-lg hover:bg-[#9DB6A0]/20 text-ink/50 hover:text-[#486B4C] transition-colors" title="Duplicate" @click="duplicateProduct(product)">📋</button>
+              <button class="p-1.5 rounded-lg hover:bg-red-50 text-ink/50 hover:text-red-400 transition-colors" title="Delete" @click="confirmDelete(product)">🗑️</button>
+            </div>
           </div>
         </div>
       </div>
@@ -122,7 +122,7 @@
       </div>
     </div>
 
-    <!-- List / Table View -->
+    <!-- List / Table View - Actions always visible -->
     <div v-else class="bg-white/60 backdrop-blur-sm rounded-3xl border border-cream-200 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
@@ -144,7 +144,7 @@
             <tr v-for="product in filteredProducts" :key="product.id" class="hover:bg-cream/40 transition-colors group">
               <td class="px-4 py-3">
                 <input type="checkbox" class="rounded border-[#9DB6A0]/40" :value="product.id" v-model="selected" />
-              </td>
+               </td>
               <td class="px-4 py-3">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden" :style="{ background: product.bg || 'linear-gradient(135deg,#fde8e8,#f9d4d4)' }">
@@ -156,21 +156,21 @@
                     <p class="text-[11px] text-ink/40 truncate max-w-[180px]">{{ product.desc || product.description }}</p>
                   </div>
                 </div>
-              </td>
+               </td>
               <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full bg-cream-200 text-xs text-ink/60">{{ product.category }}</span></td>
               <td class="px-4 py-3 font-semibold text-ink">${{ product.price }}</td>
               <td class="px-4 py-3 text-ink/70">{{ product.stock ?? '—' }}</td>
               <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full text-[11px] font-medium" :class="statusBadge(product.status)">{{ product.status || 'active' }}</span></td>
               <td class="px-4 py-3">
                 <span class="text-xs text-ink/50">{{ (product.gallery && product.gallery.length) || 0 }} images</span>
-              </td>
+               </td>
               <td class="px-4 py-3">
-                <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div class="flex items-center justify-end gap-1">
                   <button class="p-1.5 rounded-lg hover:bg-lavender/20 text-ink/50 hover:text-ink transition-colors" @click="openModal(product)" title="Edit">✏️</button>
                   <button class="p-1.5 rounded-lg hover:bg-[#9DB6A0]/20 text-ink/50 hover:text-[#486B4C] transition-colors" @click="duplicateProduct(product)" title="Duplicate">📋</button>
                   <button class="p-1.5 rounded-lg hover:bg-red-50 text-ink/50 hover:text-red-400 transition-colors" @click="confirmDelete(product)" title="Delete">🗑️</button>
                 </div>
-              </td>
+               </td>
              </tr>
             <tr v-if="filteredProducts.length === 0">
               <td colspan="8" class="text-center py-12 text-ink/40 text-sm">
@@ -197,9 +197,7 @@
       </div>
     </div>
 
-    <!-- ══════════════════════════════════════════════════════════════════════
-         ADD / EDIT PRODUCT MODAL (Full Schema)
-    ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- Product Modal -->
     <Transition name="modal">
       <div v-if="showModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
         <div class="absolute inset-0 bg-[#1a1a1a]/40 backdrop-blur-sm" @click="closeModal"></div>
@@ -485,7 +483,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 
-// ── Constants ────────────────────────────────────────────────────────────
+// Constants
 const CATEGORIES = ['Roses & Peonies', 'Greenery', 'Lavender Collection', 'Seasonal', 'Wedding', 'Romance', 'Modern', 'Exotic']
 const BG_PRESETS = [
   { label: 'Blush', value: 'linear-gradient(135deg,#fde8e8,#f9d4d4)' },
@@ -511,7 +509,7 @@ const PRODUCT_COLORS = [
   { name: 'Burgundy', hex: '#7A3B4C' }
 ]
 
-// ── State ────────────────────────────────────────────────────────────────
+// State
 const products = ref([])
 const loading = ref(false)
 const saving = ref(false)
@@ -567,7 +565,7 @@ const form = reactive({
   sortOrder: 0
 })
 
-// ── Helper functions ─────────────────────────────────────────────────────
+// Helper functions
 const toggleArrayItem = (arrayName, item) => {
   if (!form[arrayName]) form[arrayName] = []
   const index = form[arrayName].indexOf(item)
