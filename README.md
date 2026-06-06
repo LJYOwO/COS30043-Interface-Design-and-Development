@@ -84,11 +84,10 @@ Open your browser and navigate to:
 
 ## 👥 Test Accounts & Credentials
 
-To fully evaluate the system's role-based access control (RBAC), community interaction, and dashboard features, please use the following pre-configured test accounts.
+To fully evaluate the system's role-based access control (RBAC), community interaction, and dashboard features, please use the following pre-configured test accounts. Admin account credential are given in the report and readme submitted to canvas
 
 | Test User / Role | Email | Password | Testing Purpose |
 | --- | --- | --- | --- |
-
 | **Mei Lin** (Customer) | `mei@test.com` | `flora123` | Premium customer – shopping cart flow, Customizer layout, verified reviews |
 | **Bob Troublemaker** (Spammer) | `bob@test.com` | `flora123` | Malicious persona – system boundaries, spam posts, malicious review reports |
 | **Sophie Reeves** (Customer) | `sophie@test.com` | `flora123` | Auxiliary test customer (has previous purchase record) |
