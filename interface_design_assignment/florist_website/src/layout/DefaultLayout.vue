@@ -2,7 +2,7 @@
   <div class="min-h-screen flex flex-col" style="background: #FDFBF7;">
     <div class="fixed inset-0 bg-petal-mesh opacity-60 pointer-events-none" aria-hidden="true" />
 
-    <!-- ── Header ───────────────────────────────────────────────────────────── -->
+    <!-- Header -->
     <header class="fixed top-0 inset-x-0 z-50 transition-all duration-500 pt-3 px-3 sm:px-5">
       <nav
         :class="[
@@ -19,7 +19,8 @@
           </span>
         </RouterLink>
 
-        <ul class="hidden md:flex items-center gap-1">
+        <!-- Desktop navigation - now only visible on large screens (lg) -->
+        <ul class="hidden lg:flex items-center gap-1">
           <li v-for="link in navLinks" :key="link.name">
             <RouterLink
               :to="link.to"
@@ -31,11 +32,12 @@
           </li>
         </ul>
 
-        <div class="flex items-center gap-2">
+        <!-- Auth buttons group - Bulletproof layout -->
+        <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           <!-- Cart button -->
           <button
             @click="cartStore.toggleCart()"
-            class="relative p-2.5 rounded-full hover:bg-blush-100/60 transition-colors"
+            class="relative p-2 sm:p-2.5 rounded-full hover:bg-blush-100/60 transition-colors flex-shrink-0"
             aria-label="Open cart"
           >
             <svg class="w-5 h-5 text-ink/70" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
@@ -49,37 +51,41 @@
             </span>
           </button>
 
-          <!-- Auth buttons -->
+          <!-- Authenticated user section -->
           <template v-if="userStore.isAuthenticated">
+            <!-- Admin link -->
             <RouterLink
               v-if="userStore.isAdmin"
               to="/admin/products"
-              class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-ink/5 hover:bg-ink/10 text-ink text-xs font-bold transition-all border border-ink/10"
+              class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-ink/5 hover:bg-ink/10 text-ink text-xs font-bold transition-all border border-ink/10 flex-shrink-0 whitespace-nowrap"
             >
               <span>⚙️</span>
-              <span>Admin</span>
+              <span class="hidden lg:inline">Admin</span>
             </RouterLink>
 
+            <!-- Dashboard / Profile link -->
             <RouterLink
               to="/dashboard"
-              class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-[#CE8280]/10 hover:bg-[#CE8280]/20 text-[#CE8280] text-sm font-bold transition-all"
+              class="hidden sm:flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#CE8280]/10 hover:bg-[#CE8280]/20 text-[#CE8280] text-sm font-bold transition-all flex-shrink-0 max-w-[100px] md:max-w-[140px]"
             >
-              <span>{{ userStore.displayName }}</span>
+              <span class="truncate block w-full text-center">{{ userStore.displayName }}</span>
             </RouterLink>
           </template>
+          
+          <!-- Guest user section -->
           <template v-else>
             <RouterLink
               to="/login"
-              class="px-4 py-2 rounded-full bg-[#CE8280] hover:bg-[#B87472] text-white text-sm font-bold transition-all shadow-petal"
+              class="px-4 py-1.5 sm:py-2 rounded-full bg-[#CE8280] hover:bg-[#B87472] text-white text-sm font-bold transition-all shadow-petal flex-shrink-0 whitespace-nowrap"
             >
               Sign in
             </RouterLink>
           </template>
 
-          <!-- Mobile menu button -->
+          <!-- Mobile/Tablet menu button - visible on md and below (including tablets) -->
           <button
             @click="mobileOpen = !mobileOpen"
-            class="md:hidden p-2.5 rounded-full hover:bg-cream-100 transition-colors"
+            class="lg:hidden p-2.5 rounded-full hover:bg-cream-100 transition-colors flex-shrink-0"
             aria-label="Toggle menu"
           >
             <svg class="w-5 h-5 text-ink/70" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
@@ -90,9 +96,9 @@
         </div>
       </nav>
 
-      <!-- Mobile dropdown -->
+      <!-- Mobile/Tablet dropdown - visible on lg and below -->
       <Transition name="slide-down">
-        <div v-if="mobileOpen" class="md:hidden mx-3 mt-1 bg-white/95 backdrop-blur-xl border border-cream-200 rounded-2xl shadow-lg px-3 pb-3">
+        <div v-if="mobileOpen" class="lg:hidden mx-3 mt-1 bg-white/95 backdrop-blur-xl border border-cream-200 rounded-2xl shadow-lg px-3 pb-3">
           <ul class="flex flex-col gap-1 pt-2">
             <li v-for="link in navLinks" :key="link.name">
               <RouterLink
@@ -105,7 +111,7 @@
               </RouterLink>
             </li>
             
-            <!-- 🔥 ADDED: My Account / Dashboard link for mobile -->
+            <!-- My Account / Dashboard link for mobile -->
             <li v-if="userStore.isAuthenticated">
               <RouterLink
                 to="/dashboard"
@@ -127,7 +133,7 @@
               </RouterLink>
             </li>
             
-            <!-- 🔥 ADDED: Admin Panel for mobile -->
+            <!-- Admin Panel for mobile -->
             <li v-if="userStore.isAdmin">
               <RouterLink
                 to="/admin/products"
@@ -138,7 +144,7 @@
               </RouterLink>
             </li>
             
-            <!-- 🔥 ADDED: Logout button for mobile -->
+            <!-- Logout button for mobile -->
             <li v-if="userStore.isAuthenticated" class="pt-2 mt-1 border-t border-cream-100">
               <button 
                 @click="handleLogout" 
@@ -152,7 +158,7 @@
       </Transition>
     </header>
 
-    <!-- ── Cart Sidebar ─────────────────────────────────────────────────────── -->
+    <!-- Cart Sidebar -->
     <Teleport to="body">
       <Transition name="fade">
         <div
@@ -231,12 +237,12 @@
       </Transition>
     </Teleport>
 
-    <!-- ── Main content ─────────────────────────────────────────────────────── -->
+    <!-- Main content -->
     <main class="flex-1 pt-20">
       <RouterView />
     </main>
 
-    <!-- ── Footer ─────────────────────────────────────────────────────────── -->
+    <!-- Footer -->
     <footer class="relative bg-[#CE8280] text-white">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
@@ -312,7 +318,7 @@ function onScroll() {
   scrolled.value = window.scrollY > 20 
 }
 
-// 🔥 ADDED: Logout handler
+// Logout handler
 async function handleLogout() {
   await userStore.logout()
   mobileOpen.value = false
