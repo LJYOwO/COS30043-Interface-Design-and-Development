@@ -88,7 +88,7 @@ To fully evaluate the system's role-based access control (RBAC), community inter
 
 | Test User / Role | Email | Password | Testing Purpose |
 | --- | --- | --- | --- |
-| **Admin** | `admin@floralab.com` | `flora123456` | Full access to admin suite (Reviews, Products, Orders, Users control deck) |
+
 | **Mei Lin** (Customer) | `mei@test.com` | `flora123` | Premium customer – shopping cart flow, Customizer layout, verified reviews |
 | **Bob Troublemaker** (Spammer) | `bob@test.com` | `flora123` | Malicious persona – system boundaries, spam posts, malicious review reports |
 | **Sophie Reeves** (Customer) | `sophie@test.com` | `flora123` | Auxiliary test customer (has previous purchase record) |
